@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useState } from "react";
-import LogoutButton from "../../components/LogoutButton";
+import LogoutButton from "../../../components/LogoutButton";
 
 export default function NewQuizPage() {
   const [title, setTitle] = useState("");

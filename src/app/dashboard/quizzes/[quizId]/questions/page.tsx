@@ -91,19 +91,10 @@ export default function QuestionsPage({ params }: { params: { quizId: string } }
   function handleFile(file: File | null) {
     if (!file) return;
     const reader = new FileReader();
-    if (file.name.endsWith(".xlsx")) {
-      reader.onload = () => {
-        const buffer = new Uint8Array(reader.result as ArrayBuffer);
-        const base64 = btoa(String.fromCharCode(...buffer));
-        setCsv(JSON.stringify({ format: "xlsx", data: base64 }));
-      };
-      reader.readAsArrayBuffer(file);
-    } else {
-      reader.onload = () => {
-        setCsv(String(reader.result || ""));
-      };
-      reader.readAsText(file);
-    }
+    reader.onload = () => {
+      setCsv(String(reader.result || ""));
+    };
+    reader.readAsText(file);
   }
 
   const filtered = useMemo(() => {

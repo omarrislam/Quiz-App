@@ -1,4 +1,4 @@
-import { Schema, model, models, Types } from "mongoose";
+import { Model, Schema, model, models, Types } from "mongoose";
 import { baseSchemaOptions } from "./base";
 
 export type SnapshotPhase = "start" | "middle" | "end";
@@ -33,4 +33,8 @@ const AttemptSnapshotSchema = new Schema<AttemptSnapshotDocument>(
 AttemptSnapshotSchema.index({ attemptId: 1, phase: 1 }, { unique: true });
 AttemptSnapshotSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 5 });
 
-export const AttemptSnapshot = models.AttemptSnapshot || model<AttemptSnapshotDocument>("AttemptSnapshot", AttemptSnapshotSchema);
+const AttemptSnapshotModel = (models.AttemptSnapshot as Model<AttemptSnapshotDocument>) || model<AttemptSnapshotDocument>("AttemptSnapshot", AttemptSnapshotSchema);
+
+export const AttemptSnapshot = AttemptSnapshotModel;
+
+

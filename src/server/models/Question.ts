@@ -1,4 +1,4 @@
-﻿import { Schema, model, models, Types } from "mongoose";
+import { Model, Schema, model, models, Types } from "mongoose";
 import { baseSchemaOptions } from "./base";
 
 export interface QuestionDocument {
@@ -25,4 +25,7 @@ const QuestionSchema = new Schema<QuestionDocument>(
   baseSchemaOptions
 );
 
-export const Question = models.Question || model<QuestionDocument>("Question", QuestionSchema);
+const QuestionModel = (models.Question as Model<QuestionDocument>) || model<QuestionDocument>("Question", QuestionSchema);
+
+export const Question = QuestionModel;
+

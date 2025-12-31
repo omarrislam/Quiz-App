@@ -1,4 +1,4 @@
-﻿import { Schema, model, models } from "mongoose";
+import { Model, Schema, model, models } from "mongoose";
 import { baseSchemaOptions } from "./base";
 
 export type InstructorRole = "instructor" | "admin";
@@ -22,4 +22,8 @@ const InstructorSchema = new Schema<InstructorDocument>(
   baseSchemaOptions
 );
 
-export const Instructor = models.Instructor || model<InstructorDocument>("Instructor", InstructorSchema);
+const InstructorModel = (models.Instructor as Model<InstructorDocument>) || model<InstructorDocument>("Instructor", InstructorSchema);
+
+export const Instructor = InstructorModel;
+
+

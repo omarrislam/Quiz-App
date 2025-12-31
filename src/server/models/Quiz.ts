@@ -1,4 +1,4 @@
-﻿import { Schema, model, models, Types } from "mongoose";
+import { Model, Schema, model, models, Types } from "mongoose";
 import { baseSchemaOptions } from "./base";
 
 export interface QuizSettings {
@@ -54,4 +54,8 @@ const QuizSchema = new Schema<QuizDocument>(
   baseSchemaOptions
 );
 
-export const Quiz = models.Quiz || model<QuizDocument>("Quiz", QuizSchema);
+const QuizModel = (models.Quiz as Model<QuizDocument>) || model<QuizDocument>("Quiz", QuizSchema);
+
+export const Quiz = QuizModel;
+
+

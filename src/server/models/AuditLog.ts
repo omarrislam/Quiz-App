@@ -1,4 +1,4 @@
-import { Schema, model, models, Types } from "mongoose";
+import { Model, Schema, model, models, Types } from "mongoose";
 import { baseSchemaOptions } from "./base";
 
 export interface AuditLogDocument {
@@ -20,4 +20,8 @@ const AuditLogSchema = new Schema<AuditLogDocument>(
   baseSchemaOptions
 );
 
-export const AuditLog = models.AuditLog || model<AuditLogDocument>("AuditLog", AuditLogSchema);
+const AuditLogModel = (models.AuditLog as Model<AuditLogDocument>) || model<AuditLogDocument>("AuditLog", AuditLogSchema);
+
+export const AuditLog = AuditLogModel;
+
+

@@ -1,4 +1,4 @@
-﻿import { Schema, model, models, Types } from "mongoose";
+import { Model, Schema, model, models, Types } from "mongoose";
 import { baseSchemaOptions } from "./base";
 
 export interface EventDocument {
@@ -22,4 +22,8 @@ const EventSchema = new Schema<EventDocument>(
   baseSchemaOptions
 );
 
-export const Event = models.Event || model<EventDocument>("Event", EventSchema);
+const EventModel = (models.Event as Model<EventDocument>) || model<EventDocument>("Event", EventSchema);
+
+export const Event = EventModel;
+
+

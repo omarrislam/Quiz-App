@@ -1,4 +1,4 @@
-﻿import { Schema, model, models, Types } from "mongoose";
+import { Model, Schema, model, models, Types } from "mongoose";
 import { baseSchemaOptions } from "./base";
 
 export interface StudentDocument {
@@ -21,4 +21,8 @@ const StudentSchema = new Schema<StudentDocument>(
   baseSchemaOptions
 );
 
-export const Student = models.Student || model<StudentDocument>("Student", StudentSchema);
+const StudentModel = (models.Student as Model<StudentDocument>) || model<StudentDocument>("Student", StudentSchema);
+
+export const Student = StudentModel;
+
+

@@ -1,4 +1,4 @@
-﻿import { Schema, model, models, Types } from "mongoose";
+import { Model, Schema, model, models, Types } from "mongoose";
 import { baseSchemaOptions } from "./base";
 
 export interface InvitationDocument {
@@ -29,4 +29,8 @@ const InvitationSchema = new Schema<InvitationDocument>(
   baseSchemaOptions
 );
 
-export const Invitation = models.Invitation || model<InvitationDocument>("Invitation", InvitationSchema);
+const InvitationModel = (models.Invitation as Model<InvitationDocument>) || model<InvitationDocument>("Invitation", InvitationSchema);
+
+export const Invitation = InvitationModel;
+
+

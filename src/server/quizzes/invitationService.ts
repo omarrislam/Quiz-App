@@ -53,32 +53,26 @@ export async function sendInvitations(quizId: string) {
     if (DEV_EMAIL_MODE) {
       console.info(`[dev-email] ${student.email} ${link} OTP=${otp}`);
     } else {
-      try {
-        await mailer.sendMail({
-          from: SMTP_FROM,
-          to: student.email,
-          subject: "Quiz Invitation: Your Access Code",
-          text: [
-            `Hello ${student.name},`,
-            "",
-            "You have been invited to take a quiz.",
-            `Quiz link: ${link}`,
-            `One-time access code (OTP): ${otp}`,
-            "",
-            "Instructions:",
-            "1) Open the quiz link.",
-            "2) Enter your name and email if prompted.",
-            "3) Enter the OTP above to start.",
-            "4) Keep this code private. It expires in 15 minutes.",
-            "",
-            "If you did not request this, please ignore this email."
-          ].join("\n")
-        });
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to send email";
-        console.error("SMTP send failed:", error);
-        throw new ApiError(`SMTP error: ${message}`, 500);
-      }
+      await mailer.sendMail({
+        from: SMTP_FROM,
+        to: student.email,
+        subject: "Quiz Invitation: Your Access Code",
+        text: [
+          `Hello ${student.name},`,
+          "",
+          "You have been invited to take a quiz.",
+          `Quiz link: ${link}`,
+          `One-time access code (OTP): ${otp}`,
+          "",
+          "Instructions:",
+          "1) Open the quiz link.",
+          "2) Enter your name and email if prompted.",
+          "3) Enter the OTP above to start.",
+          "4) Keep this code private. It expires in 15 minutes.",
+          "",
+          "If you did not request this, please ignore this email."
+        ].join("\n")
+      });
     }
     await AuditLog.create({
       quizId,
@@ -133,32 +127,26 @@ export async function resendInvitation(quizId: string, email: string) {
   if (DEV_EMAIL_MODE) {
     console.info(`[dev-email] ${student.email} ${link} OTP=${otp}`);
   } else {
-    try {
-      await mailer.sendMail({
-        from: SMTP_FROM,
-        to: student.email,
-        subject: "Quiz Invitation: Your Access Code",
-        text: [
-          `Hello ${student.name},`,
-          "",
-          "You have been invited to take a quiz.",
-          `Quiz link: ${link}`,
-          `One-time access code (OTP): ${otp}`,
-          "",
-          "Instructions:",
-          "1) Open the quiz link.",
-          "2) Enter your name and email if prompted.",
-          "3) Enter the OTP above to start.",
-          "4) Keep this code private. It expires in 15 minutes.",
-          "",
-          "If you did not request this, please ignore this email."
-        ].join("\n")
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to send email";
-      console.error("SMTP send failed:", error);
-      throw new ApiError(`SMTP error: ${message}`, 500);
-    }
+    await mailer.sendMail({
+      from: SMTP_FROM,
+      to: student.email,
+      subject: "Quiz Invitation: Your Access Code",
+      text: [
+        `Hello ${student.name},`,
+        "",
+        "You have been invited to take a quiz.",
+        `Quiz link: ${link}`,
+        `One-time access code (OTP): ${otp}`,
+        "",
+        "Instructions:",
+        "1) Open the quiz link.",
+        "2) Enter your name and email if prompted.",
+        "3) Enter the OTP above to start.",
+        "4) Keep this code private. It expires in 15 minutes.",
+        "",
+        "If you did not request this, please ignore this email."
+      ].join("\n")
+    });
   }
   await AuditLog.create({
     quizId,
@@ -208,32 +196,26 @@ export async function sendInvitationToStudent(quizId: string, email: string) {
   if (DEV_EMAIL_MODE) {
     console.info(`[dev-email] ${student.email} ${link} OTP=${otp}`);
   } else {
-    try {
-      await mailer.sendMail({
-        from: SMTP_FROM,
-        to: student.email,
-        subject: "Quiz Invitation: Your Access Code",
-        text: [
-          `Hello ${student.name},`,
-          "",
-          "You have been invited to take a quiz.",
-          `Quiz link: ${link}`,
-          `One-time access code (OTP): ${otp}`,
-          "",
-          "Instructions:",
-          "1) Open the quiz link.",
-          "2) Enter your name and email if prompted.",
-          "3) Enter the OTP above to start.",
-          "4) Keep this code private. It expires in 15 minutes.",
-          "",
-          "If you did not request this, please ignore this email."
-        ].join("\n")
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to send email";
-      console.error("SMTP send failed:", error);
-      throw new ApiError(`SMTP error: ${message}`, 500);
-    }
+    await mailer.sendMail({
+      from: SMTP_FROM,
+      to: student.email,
+      subject: "Quiz Invitation: Your Access Code",
+      text: [
+        `Hello ${student.name},`,
+        "",
+        "You have been invited to take a quiz.",
+        `Quiz link: ${link}`,
+        `One-time access code (OTP): ${otp}`,
+        "",
+        "Instructions:",
+        "1) Open the quiz link.",
+        "2) Enter your name and email if prompted.",
+        "3) Enter the OTP above to start.",
+        "4) Keep this code private. It expires in 15 minutes.",
+        "",
+        "If you did not request this, please ignore this email."
+      ].join("\n")
+    });
   }
   await AuditLog.create({
     quizId,

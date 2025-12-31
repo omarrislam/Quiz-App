@@ -1,4 +1,5 @@
-﻿import { Attempt } from "../models/Attempt";
+import { Types } from "mongoose";
+import { Attempt } from "../models/Attempt";
 import { Event } from "../models/Event";
 import { Question } from "../models/Question";
 import { ApiError } from "../http/errors";
@@ -38,8 +39,11 @@ export async function finishAttempt(attemptId: string, answers: { questionId: st
     const question = map.get(answer.questionId);
     const correctIndex = question ? question.correctIndex : -1;
     const isCorrect = answer.selectedIndex !== null && answer.selectedIndex === correctIndex;
+    const questionId = Types.ObjectId.isValid(answer.questionId)
+      ? new Types.ObjectId(answer.questionId)
+      : new Types.ObjectId();
     return {
-      questionId: answer.questionId,
+      questionId,
       selectedIndex: answer.selectedIndex,
       isCorrect
     };

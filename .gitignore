@@ -1,0 +1,17 @@
+﻿node_modules/
+.next/
+dist/
+build/
+coverage/
+.env*
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.codex/
+.specify/
+.next/
+node_modules/
+.env
+.env.*

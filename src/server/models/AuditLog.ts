@@ -1,0 +1,23 @@
+import { Schema, model, models, Types } from "mongoose";
+import { baseSchemaOptions } from "./base";
+
+export interface AuditLogDocument {
+  quizId: Types.ObjectId;
+  type: string;
+  message: string;
+  meta?: Record<string, unknown>;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+const AuditLogSchema = new Schema<AuditLogDocument>(
+  {
+    quizId: { type: Schema.Types.ObjectId, required: true, index: true },
+    type: { type: String, required: true },
+    message: { type: String, required: true },
+    meta: { type: Object, default: {} }
+  },
+  baseSchemaOptions
+);
+
+export const AuditLog = models.AuditLog || model<AuditLogDocument>("AuditLog", AuditLogSchema);

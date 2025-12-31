@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useState } from "react";
+import LogoutButton from "../../../../../components/LogoutButton";
 
 type Answer = {
   question: string;
@@ -41,6 +42,7 @@ export default function AttemptDetailPage({ params }: { params: { quizId: string
       <div className="page-actions">
         <a className="button-secondary" href="/dashboard">Back to Dashboard</a>
         <a className="button-secondary" href={`/dashboard/quizzes/${params.quizId}/monitor`}>Back to Monitor</a>
+        <LogoutButton />
       </div>
       <div className="header-card">
         <h1 className="header-title">Attempt Detail</h1>

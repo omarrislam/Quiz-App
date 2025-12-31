@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import LogoutButton from "../../../../components/LogoutButton";
 
 type AuditItem = {
   id: string;
@@ -35,6 +36,7 @@ export default function AuditPage({ params }: { params: { quizId: string } }) {
       <div className="page-actions">
         <a className="button-secondary" href="/dashboard">Back to Dashboard</a>
         <a className="button-secondary" href={`/dashboard/quizzes/${params.quizId}/monitor`}>Back to Monitor</a>
+        <LogoutButton />
       </div>
       <div className="header-card">
         <h1 className="header-title">Audit Log</h1>

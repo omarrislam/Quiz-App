@@ -4,7 +4,7 @@ export default function HomePage() {
   return (
     <main>
       <div className="header">
-        <h1>Arch Quiz Platform</h1>
+        <h1>Quiz Platform</h1>
         <p>Instructor and student entry points.</p>
       </div>
       <div className="card">

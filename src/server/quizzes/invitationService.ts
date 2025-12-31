@@ -56,7 +56,7 @@ export async function sendInvitations(quizId: string) {
       await mailer.sendMail({
         from: SMTP_FROM,
         to: student.email,
-        subject: "Your Arch Quiz Invitation",
+        subject: "Your Quiz Invitation",
         text: `Quiz link: ${link}\nOTP: ${otp}`
       });
     }
@@ -116,7 +116,7 @@ export async function resendInvitation(quizId: string, email: string) {
     await mailer.sendMail({
       from: SMTP_FROM,
       to: student.email,
-      subject: "Your Arch Quiz Invitation",
+      subject: "Your Quiz Invitation",
       text: `Quiz link: ${link}\nOTP: ${otp}`
     });
   }
@@ -171,7 +171,7 @@ export async function sendInvitationToStudent(quizId: string, email: string) {
     await mailer.sendMail({
       from: SMTP_FROM,
       to: student.email,
-      subject: "Your Arch Quiz Invitation",
+      subject: "Your Quiz Invitation",
       text: `Quiz link: ${link}\nOTP: ${otp}`
     });
   }

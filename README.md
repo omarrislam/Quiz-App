@@ -1,4 +1,4 @@
-# Quiz App
+# Quiz Platform
 
 A Next.js 14 quiz platform with instructor dashboard, question/student management, live monitoring, and OTP-based quiz access.
 

@@ -15,6 +15,9 @@ export async function POST(request: NextRequest) {
     if (!name || !email || !password) {
       throw new ApiError("Missing required fields", 400);
     }
+    if (!email.endsWith("@mans.edu.eg")) {
+      throw new ApiError("Only @mans.edu.eg emails are allowed", 400);
+    }
 
     await connectDb();
     const existing = await Instructor.findOne({ email }).lean();

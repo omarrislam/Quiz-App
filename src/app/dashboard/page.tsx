@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
+import LogoutButton from "../components/LogoutButton";
 
 type Quiz = {
   _id: string;
@@ -51,6 +52,10 @@ export default function DashboardPage() {
 
   return (
     <main>
+      <div className="page-actions">
+        <span />
+        <LogoutButton />
+      </div>
       <div className="header-card">
         <h1 className="header-title">Instructor Dashboard</h1>
         <p className="header-subtitle">Manage your quizzes and monitor results.</p>

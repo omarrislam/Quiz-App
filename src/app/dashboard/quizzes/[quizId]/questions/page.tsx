@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import LogoutButton from "../../../../components/LogoutButton";
 
 type Question = { _id: string; text: string; options: string[]; correctIndex?: number };
 
@@ -114,6 +115,7 @@ export default function QuestionsPage({ params }: { params: { quizId: string } }
     <main>
       <div className="page-actions">
         <a className="button-secondary" href="/dashboard">Back to Dashboard</a>
+        <LogoutButton />
       </div>
       <h1>Upload Questions</h1>
       <div className="card">

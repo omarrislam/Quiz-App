@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
+import LogoutButton from "../../../../components/LogoutButton";
 
 type Student = { _id: string; name: string; email: string; externalId?: string | null };
 
@@ -140,6 +141,7 @@ export default function StudentsPage({ params }: { params: { quizId: string } })
     <main>
       <div className="page-actions">
         <a className="button-secondary" href="/dashboard">Back to Dashboard</a>
+        <LogoutButton />
       </div>
       <h1>Upload Students</h1>
       <div className="card">

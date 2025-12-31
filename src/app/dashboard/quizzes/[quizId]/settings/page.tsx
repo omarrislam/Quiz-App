@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import LogoutButton from "../../../../components/LogoutButton";
 
 type QuizSettings = {
   questionTimeSeconds: number;
@@ -87,6 +88,7 @@ export default function QuizSettingsPage({ params }: { params: { quizId: string 
     <main>
       <div className="page-actions">
         <a className="button-secondary" href="/dashboard">Back to Dashboard</a>
+        <LogoutButton />
       </div>
       <div className="header-card">
         <h1 className="header-title">Quiz Settings</h1>

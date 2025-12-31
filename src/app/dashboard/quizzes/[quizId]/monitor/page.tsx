@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
+import LogoutButton from "../../../../components/LogoutButton";
 import AttemptTable from "./components/AttemptTable";
 import Controls from "./components/Controls";
 
@@ -58,6 +59,7 @@ export default function MonitorPage({ params }: { params: { quizId: string } }) 
     <main>
       <div className="page-actions">
         <a className="button-secondary" href="/dashboard">Back to Dashboard</a>
+        <LogoutButton />
       </div>
       <div className="header-card">
         <h1 className="header-title">Live Monitor</h1>

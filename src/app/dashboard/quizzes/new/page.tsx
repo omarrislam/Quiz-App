@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useState } from "react";
+import LogoutButton from "../../components/LogoutButton";
 
 export default function NewQuizPage() {
   const [title, setTitle] = useState("");
@@ -42,6 +43,7 @@ export default function NewQuizPage() {
     <main>
       <div className="page-actions">
         <a className="button-secondary" href="/dashboard">Back to Dashboard</a>
+        <LogoutButton />
       </div>
       <h1>Create Quiz</h1>
       <div className="card">

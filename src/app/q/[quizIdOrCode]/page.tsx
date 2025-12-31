@@ -25,7 +25,7 @@ type Student = { _id: string; name: string; email: string };
 export default function QuizPage({ params }: { params: { quizIdOrCode: string } }) {
   const [quizTitle, setQuizTitle] = useState("Quiz");
   const [questionTimeSeconds, setQuestionTimeSeconds] = useState<number | null>(null);
-  const [webcamRequired, setWebcamRequired] = useState(false);
+  const [webcamRequired, setWebcamRequired] = useState<boolean | null>(null);
   const [webcamGranted, setWebcamGranted] = useState(false);
   const [webcamError, setWebcamError] = useState("");
   const [name, setName] = useState("");
@@ -190,11 +190,32 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
         <input className="input" placeholder="Enter OTP" value={otp} onChange={(e) => setOtp(e.target.value)} />
         <br />
         <br />
+        <div className="button-row" style={{ marginTop: -6 }}>
+          <button
+            className="button-secondary"
+            type="button"
+            onClick={requestWebcamAccess}
+            disabled={webcamRequired === false}
+          >
+            {webcamGranted ? "Webcam Ready" : webcamRequired === null ? "Checking webcam..." : "Enable Webcam"}
+          </button>
+          <span className="section-title">
+            {webcamRequired === null
+              ? "Checking quiz requirements..."
+              : webcamRequired
+              ? webcamGranted
+                ? "Webcam permission granted."
+                : "Webcam access required to start."
+              : "Webcam not required for this quiz."}
+          </span>
+          {webcamError ? <span className="section-title">{webcamError}</span> : null}
+        </div>
+        <br />
         <div className="button-row">
           <button
             className="button"
             onClick={verify}
-            disabled={webcamRequired && !webcamGranted}
+            disabled={(webcamRequired === null) || (webcamRequired && !webcamGranted)}
           >
             Start Quiz
           </button>
@@ -210,17 +231,6 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
             Time per question: {questionTimeSeconds ?? 35}s
           </span>
         </div>
-        {webcamRequired ? (
-          <div className="button-row">
-            <button className="button-secondary" type="button" onClick={requestWebcamAccess}>
-              {webcamGranted ? "Webcam Ready" : "Enable Webcam"}
-            </button>
-            <span className="section-title">
-              {webcamGranted ? "Webcam permission granted." : "Webcam access required to start."}
-            </span>
-            {webcamError ? <span className="section-title">{webcamError}</span> : null}
-          </div>
-        ) : null}
         {message ? <p>{message}</p> : null}
         {error ? <p>{error}</p> : null}
       </div>

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -40,7 +40,6 @@ export default function QuizClient({
   const [overlaySeconds, setOverlaySeconds] = useState(10);
   const [ready, setReady] = useState(false);
   const [forceEnded, setForceEnded] = useState(false);
-  const [examStarted, setExamStarted] = useState(false);
   const submittingRef = useRef(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -113,19 +112,6 @@ export default function QuizClient({
     }
   }
 
-  async function beginExam() {
-    if (requireFullscreen && isDesktop) {
-      await requestFullscreen();
-    }
-    if (enableWebcamSnapshots) {
-      await startWebcam();
-    }
-    if (requireFullscreen && isDesktop && !isFullscreenActive()) {
-      await requestFullscreen();
-    }
-    setExamStarted(true);
-  }
-
   async function captureSnapshot(phase: "start" | "middle" | "end") {
     if (!enableWebcamSnapshots || !webcamActive) return;
     if (capturedRef.current[phase]) return;
@@ -181,7 +167,7 @@ export default function QuizClient({
   }
 
   useEffect(() => {
-    if (!requireFullscreen || !isDesktop || !examStarted) return;
+    if (!requireFullscreen || !isDesktop) return;
 
     const onFullscreenChange = () => {
       const active = isFullscreenActive();
@@ -197,14 +183,26 @@ export default function QuizClient({
     };
 
     document.addEventListener("fullscreenchange", onFullscreenChange);
+    requestFullscreen();
 
     return () => {
       document.removeEventListener("fullscreenchange", onFullscreenChange);
     };
-  }, [requireFullscreen, isDesktop, examStarted]);
+  }, [requireFullscreen, isDesktop]);
 
   useEffect(() => {
+    if (!enableWebcamSnapshots) return;
+    let active = true;
+    const run = async () => {
+      await startWebcam();
+      if (!active && streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+    };
+    run();
     return () => {
+      active = false;
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
@@ -212,50 +210,32 @@ export default function QuizClient({
       setWebcamActive(false);
       setWebcamReady(false);
     };
-  }, []);
+  }, [enableWebcamSnapshots]);
 
   useEffect(() => {
-    if (enableWebcamSnapshots || (requireFullscreen && isDesktop)) {
-      setExamStarted(false);
-      setReady(false);
-      return;
-    }
-    setExamStarted(true);
-  }, [enableWebcamSnapshots, requireFullscreen, isDesktop]);
-
-  useEffect(() => {
-    if (!examStarted) return;
     const id = window.requestAnimationFrame(() => {
       setReady(true);
     });
     return () => window.cancelAnimationFrame(id);
-  }, [examStarted]);
+  }, []);
 
   useEffect(() => {
-    if (!enableWebcamSnapshots || !webcamActive || !webcamReady || !ready || !examStarted) return;
+    if (!enableWebcamSnapshots || !webcamActive || !webcamReady || !ready) return;
     const startId = window.setTimeout(() => {
       captureSnapshot("start");
     }, 1500);
     return () => {
       window.clearTimeout(startId);
     };
-  }, [enableWebcamSnapshots, webcamActive, webcamReady, ready, examStarted]);
+  }, [enableWebcamSnapshots, webcamActive, webcamReady, ready]);
 
   useEffect(() => {
-    if (!examStarted) return;
-    if (!requireFullscreen || !isDesktop) return;
-    if (webcamActive && !isFullscreenActive()) {
-      requestFullscreen();
-    }
-  }, [examStarted, requireFullscreen, isDesktop, webcamActive]);
-
-  useEffect(() => {
-    if (!enableWebcamSnapshots || !webcamActive || !webcamReady || !examStarted) return;
+    if (!enableWebcamSnapshots || !webcamActive || !webcamReady) return;
     const midpoint = Math.max(0, Math.floor(questions.length / 2));
     if (index >= midpoint && !capturedRef.current.middle) {
       captureSnapshot("middle");
     }
-  }, [enableWebcamSnapshots, webcamActive, webcamReady, examStarted, index, questions.length]);
+  }, [enableWebcamSnapshots, webcamActive, webcamReady, index, questions.length]);
 
   useEffect(() => {
     const onVisibility = () => {
@@ -317,14 +297,14 @@ export default function QuizClient({
 
   useEffect(() => {
     const timer = setInterval(() => {
-      if (paused || !ready || !examStarted) return;
+      if (paused || !ready) return;
       setRemaining((prev) => prev - 1);
       if (totalTimeSeconds) {
         setExamRemaining((prev) => prev - 1);
       }
     }, 1000);
     return () => clearInterval(timer);
-  }, [paused, totalTimeSeconds, ready, examStarted]);
+  }, [paused, totalTimeSeconds, ready]);
 
   useEffect(() => {
     const poll = setInterval(() => {
@@ -342,19 +322,19 @@ export default function QuizClient({
   }, [attemptId]);
 
   useEffect(() => {
-    if (!ready || !examStarted) return;
+    if (!ready) return;
     if (remaining <= 0) {
       goNext();
     }
-  }, [remaining, ready, examStarted]);
+  }, [remaining, ready]);
 
   useEffect(() => {
     if (!totalTimeSeconds) return;
-    if (!ready || !examStarted) return;
+    if (!ready) return;
     if (examRemaining <= 0) {
       submitNow();
     }
-  }, [examRemaining, totalTimeSeconds, ready, examStarted]);
+  }, [examRemaining, totalTimeSeconds, ready]);
 
   useEffect(() => {
     if (!overlay) return;
@@ -377,10 +357,8 @@ export default function QuizClient({
     if (total === 0) return 0;
     return Math.round((index / total) * 100);
   }, [index, total]);
-  const needsStartGate = enableWebcamSnapshots || (requireFullscreen && isDesktop);
 
   function choose(optionIndex: number) {
-    if (!examStarted) return;
     setAnswers((prev) => ({ ...prev, [current.id]: optionIndex }));
   }
 
@@ -408,7 +386,6 @@ export default function QuizClient({
   }
 
   async function goNext() {
-    if (!examStarted) return;
     if (answers[current.id] == null) {
       return;
     }
@@ -442,9 +419,7 @@ export default function QuizClient({
       {enableWebcamSnapshots ? (
         <div className="card">
           <p className="section-title" style={{ marginBottom: 6 }}>Webcam snapshots enabled</p>
-          {!examStarted ? (
-            <p>Camera access will be requested when the exam starts.</p>
-          ) : webcamActive ? (
+          {webcamActive ? (
             <p>Camera connected. Snapshots will be captured automatically.</p>
           ) : (
             <>
@@ -487,33 +462,6 @@ export default function QuizClient({
           <p className="section-title" style={{ marginTop: 10 }}>Total time left: {examRemaining}s</p>
         ) : null}
       </div>
-      {needsStartGate && !examStarted ? (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(12, 20, 41, 0.8)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 55
-          }}
-        >
-          <div className="card" style={{ maxWidth: 460, textAlign: "center" }}>
-            <h2 style={{ marginTop: 0 }}>Start exam</h2>
-            <p>
-              {enableWebcamSnapshots && requireFullscreen && isDesktop
-                ? "We will request fullscreen and camera access before starting."
-                : enableWebcamSnapshots
-                ? "We will request camera access before starting."
-                : "We will request fullscreen before starting."}
-            </p>
-            <div className="button-row" style={{ justifyContent: "center" }}>
-              <button className="button" onClick={beginExam}>Start Exam</button>
-            </div>
-          </div>
-        </div>
-      ) : null}
       {forceEnded ? (
         <div
           style={{

@@ -11,7 +11,8 @@ export async function GET(_: Request, { params }: { params: { quizId: string } }
     }
     return ok({
       title: quiz.title,
-      questionTimeSeconds: quiz.settings?.questionTimeSeconds || 35
+      questionTimeSeconds: quiz.settings?.questionTimeSeconds || 35,
+      enableWebcamSnapshots: Boolean(quiz.settings?.enableWebcamSnapshots)
     });
   } catch (error) {
     return handleError(error);

@@ -25,6 +25,9 @@ type Student = { _id: string; name: string; email: string };
 export default function QuizPage({ params }: { params: { quizIdOrCode: string } }) {
   const [quizTitle, setQuizTitle] = useState("Quiz");
   const [questionTimeSeconds, setQuestionTimeSeconds] = useState<number | null>(null);
+  const [webcamRequired, setWebcamRequired] = useState(false);
+  const [webcamGranted, setWebcamGranted] = useState(false);
+  const [webcamError, setWebcamError] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
@@ -57,9 +60,28 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
         if (typeof data?.questionTimeSeconds === "number") {
           setQuestionTimeSeconds(data.questionTimeSeconds);
         }
+        if (typeof data?.enableWebcamSnapshots === "boolean") {
+          setWebcamRequired(data.enableWebcamSnapshots);
+        }
       })
       .catch(() => {});
   }, [params.quizIdOrCode]);
+
+  async function requestWebcamAccess() {
+    setWebcamError("");
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setWebcamError("Camera not supported in this browser.");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      stream.getTracks().forEach((track) => track.stop());
+      setWebcamGranted(true);
+    } catch {
+      setWebcamError("Camera access blocked. Please allow permission.");
+      setWebcamGranted(false);
+    }
+  }
 
   useEffect(() => {
     if (!name.trim()) {
@@ -169,7 +191,13 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
         <br />
         <br />
         <div className="button-row">
-          <button className="button" onClick={verify}>Start Quiz</button>
+          <button
+            className="button"
+            onClick={verify}
+            disabled={webcamRequired && !webcamGranted}
+          >
+            Start Quiz
+          </button>
           <button className="button-secondary" type="button" onClick={resendOtp}>Resend OTP</button>
           <button
             className="button-secondary"
@@ -182,6 +210,17 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
             Time per question: {questionTimeSeconds ?? 35}s
           </span>
         </div>
+        {webcamRequired ? (
+          <div className="button-row">
+            <button className="button-secondary" type="button" onClick={requestWebcamAccess}>
+              {webcamGranted ? "Webcam Ready" : "Enable Webcam"}
+            </button>
+            <span className="section-title">
+              {webcamGranted ? "Webcam permission granted." : "Webcam access required to start."}
+            </span>
+            {webcamError ? <span className="section-title">{webcamError}</span> : null}
+          </div>
+        ) : null}
         {message ? <p>{message}</p> : null}
         {error ? <p>{error}</p> : null}
       </div>

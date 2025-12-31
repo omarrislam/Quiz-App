@@ -114,10 +114,13 @@ export default function QuizClient({
   }
 
   async function beginExam() {
+    if (requireFullscreen && isDesktop) {
+      await requestFullscreen();
+    }
     if (enableWebcamSnapshots) {
       await startWebcam();
     }
-    if (requireFullscreen && isDesktop) {
+    if (requireFullscreen && isDesktop && !isFullscreenActive()) {
       await requestFullscreen();
     }
     setExamStarted(true);
@@ -237,6 +240,14 @@ export default function QuizClient({
       window.clearTimeout(startId);
     };
   }, [enableWebcamSnapshots, webcamActive, webcamReady, ready, examStarted]);
+
+  useEffect(() => {
+    if (!examStarted) return;
+    if (!requireFullscreen || !isDesktop) return;
+    if (webcamActive && !isFullscreenActive()) {
+      requestFullscreen();
+    }
+  }, [examStarted, requireFullscreen, isDesktop, webcamActive]);
 
   useEffect(() => {
     if (!enableWebcamSnapshots || !webcamActive || !webcamReady || !examStarted) return;

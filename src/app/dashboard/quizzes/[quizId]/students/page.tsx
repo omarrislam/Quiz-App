@@ -13,6 +13,9 @@ export default function StudentsPage({ params }: { params: { quizId: string } })
   const [editingId, setEditingId] = useState<string | null>(null);
   const [emailDraft, setEmailDraft] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [sendingInvites, setSendingInvites] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState<string | null>(null);
+  const [deletingAll, setDeletingAll] = useState(false);
 
   async function loadStudents() {
     const res = await fetch(`/api/quizzes/${params.quizId}/students`);
@@ -50,10 +53,12 @@ export default function StudentsPage({ params }: { params: { quizId: string } })
 
   async function sendInvites() {
     setMessage("");
+    setSendingInvites(true);
     const res = await fetch(`/api/quizzes/${params.quizId}/invitations/send`, {
       method: "POST"
     });
     const data = await res.json().catch(() => null);
+    setSendingInvites(false);
     if (!res.ok) {
       setMessage(data?.error || "Failed to send invitations.");
       return;
@@ -63,12 +68,14 @@ export default function StudentsPage({ params }: { params: { quizId: string } })
 
   async function sendInvite(email: string) {
     setMessage("");
+    setSendingEmail(email);
     const res = await fetch(`/api/quizzes/${params.quizId}/invitations/send-one`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email })
     });
     const data = await res.json().catch(() => null);
+    setSendingEmail(null);
     if (!res.ok) {
       setMessage(data?.error || "Failed to send invitation.");
       return;
@@ -88,8 +95,10 @@ export default function StudentsPage({ params }: { params: { quizId: string } })
     if (!confirm("Delete all students in this quiz?")) {
       return;
     }
+    setDeletingAll(true);
     await fetch(`/api/quizzes/${params.quizId}/students`, { method: "DELETE" });
     await loadStudents();
+    setDeletingAll(false);
   }
 
   async function saveEmail(studentId: string) {
@@ -151,11 +160,25 @@ export default function StudentsPage({ params }: { params: { quizId: string } })
           <button className="button" onClick={upload} disabled={uploading}>
             {uploading ? "Uploading..." : "Upload"}
           </button>
-          <button className="button" onClick={sendInvites} style={{ marginLeft: 8 }}>Send Invitations</button>
+          <button className="button" onClick={sendInvites} style={{ marginLeft: 8 }} disabled={sendingInvites}>
+            {sendingInvites ? "Sending..." : "Send Invitations"}
+          </button>
           {uploading ? (
             <span className="spinner-inline">
               <span className="spinner" />
               <span className="section-title">Processing CSV</span>
+            </span>
+          ) : null}
+          {sendingInvites ? (
+            <span className="spinner-inline">
+              <span className="spinner" />
+              <span className="section-title">Sending invites</span>
+            </span>
+          ) : null}
+          {deletingAll ? (
+            <span className="spinner-inline">
+              <span className="spinner" />
+              <span className="section-title">Deleting students</span>
             </span>
           ) : null}
         </div>
@@ -172,8 +195,8 @@ export default function StudentsPage({ params }: { params: { quizId: string } })
               onChange={(e) => setFilter(e.target.value)}
               style={{ width: 320, flex: "0 1 320px" }}
             />
-            <button className="button-secondary" onClick={deleteAll} style={{ whiteSpace: "nowrap" }}>
-              Delete All
+            <button className="button-secondary" onClick={deleteAll} style={{ whiteSpace: "nowrap" }} disabled={deletingAll}>
+              {deletingAll ? "Deleting..." : "Delete All"}
             </button>
           </div>
         </div>
@@ -218,8 +241,8 @@ export default function StudentsPage({ params }: { params: { quizId: string } })
                         </div>
                       ) : (
                         <div className="table-actions inline">
-                          <button className="button-secondary" onClick={() => sendInvite(student.email)}>
-                            Send Invite
+                          <button className="button-secondary" onClick={() => sendInvite(student.email)} disabled={sendingEmail === student.email}>
+                            {sendingEmail === student.email ? "Sending..." : "Send Invite"}
                           </button>
                           <button
                             className="button-secondary"

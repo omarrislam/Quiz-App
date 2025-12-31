@@ -15,8 +15,10 @@ export default function NewQuizPage() {
   const [requireFullscreen, setRequireFullscreen] = useState(true);
   const [logSuspiciousActivity, setLogSuspiciousActivity] = useState(true);
   const [enableWebcamSnapshots, setEnableWebcamSnapshots] = useState(false);
+  const [creating, setCreating] = useState(false);
 
   async function submit() {
+    setCreating(true);
     const startDate = startAt ? new Date(startAt) : null;
     const endDate = endAt ? new Date(endAt) : null;
     const settings = {
@@ -36,6 +38,7 @@ export default function NewQuizPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title, description, settings })
     });
+    setCreating(false);
     window.location.href = "/dashboard";
   }
 
@@ -95,7 +98,17 @@ export default function NewQuizPage() {
         </label>
         <br />
         <br />
-        <button className="button" onClick={submit}>Create</button>
+        <div className="button-row">
+          <button className="button" onClick={submit} disabled={creating}>
+            {creating ? "Creating..." : "Create"}
+          </button>
+          {creating ? (
+            <span className="spinner-inline">
+              <span className="spinner" />
+              <span className="section-title">Creating quiz</span>
+            </span>
+          ) : null}
+        </div>
       </div>
     </main>
   );

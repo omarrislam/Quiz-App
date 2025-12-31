@@ -30,6 +30,7 @@ export default function QuizSettingsPage({ params }: { params: { quizId: string 
     enableWebcamSnapshots: false
   });
   const [message, setMessage] = useState("");
+  const [saving, setSaving] = useState(false);
 
   function toLocalDateTime(value: string | null) {
     if (!value) return null;
@@ -64,6 +65,7 @@ export default function QuizSettingsPage({ params }: { params: { quizId: string 
 
   async function save() {
     setMessage("");
+    setSaving(true);
     const startAt = settings.startAt ? new Date(settings.startAt) : null;
     const endAt = settings.endAt ? new Date(settings.endAt) : null;
     const payload = {
@@ -81,6 +83,7 @@ export default function QuizSettingsPage({ params }: { params: { quizId: string 
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
+    setSaving(false);
     setMessage(res.ok ? "Saved." : "Save failed.");
   }
 
@@ -185,7 +188,17 @@ export default function QuizSettingsPage({ params }: { params: { quizId: string 
         </label>
         <br />
         <br />
-        <button className="button" onClick={save}>Save changes</button>
+        <div className="button-row">
+          <button className="button" onClick={save} disabled={saving}>
+            {saving ? "Saving..." : "Save changes"}
+          </button>
+          {saving ? (
+            <span className="spinner-inline">
+              <span className="spinner" />
+              <span className="section-title">Saving settings</span>
+            </span>
+          ) : null}
+        </div>
         {message ? <p>{message}</p> : null}
       </div>
     </main>

@@ -15,6 +15,7 @@ export default function QuestionsPage({ params }: { params: { quizId: string } }
   const [editOptions, setEditOptions] = useState<string[]>(["", "", "", ""]);
   const [editCorrect, setEditCorrect] = useState("A");
   const [uploading, setUploading] = useState(false);
+  const [deletingAll, setDeletingAll] = useState(false);
 
   async function loadQuestions() {
     const res = await fetch(`/api/quizzes/${params.quizId}/questions`);
@@ -84,8 +85,10 @@ export default function QuestionsPage({ params }: { params: { quizId: string } }
     if (!confirm("Delete all questions in this quiz?")) {
       return;
     }
+    setDeletingAll(true);
     await fetch(`/api/quizzes/${params.quizId}/questions`, { method: "DELETE" });
     await loadQuestions();
+    setDeletingAll(false);
   }
 
   function handleFile(file: File | null) {
@@ -128,6 +131,12 @@ export default function QuestionsPage({ params }: { params: { quizId: string } }
           <button className="button" onClick={upload} disabled={uploading}>
             {uploading ? "Uploading..." : "Upload"}
           </button>
+          {deletingAll ? (
+            <span className="spinner-inline">
+              <span className="spinner" />
+              <span className="section-title">Deleting questions</span>
+            </span>
+          ) : null}
           {uploading ? (
             <span className="spinner-inline">
               <span className="spinner" />
@@ -148,7 +157,9 @@ export default function QuestionsPage({ params }: { params: { quizId: string } }
               onChange={(e) => setFilter(e.target.value)}
               style={{ width: 320, flex: "0 1 320px" }}
             />
-            <button className="button-secondary" onClick={deleteAll}>Delete All</button>
+            <button className="button-secondary" onClick={deleteAll} disabled={deletingAll}>
+              {deletingAll ? "Deleting..." : "Delete All"}
+            </button>
           </div>
         </div>
         {filtered.length === 0 ? (

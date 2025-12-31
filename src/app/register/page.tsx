@@ -7,14 +7,9 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
-  const domain = "@mans.edu.eg";
 
   async function submit() {
     setMessage("");
-    if (!email.toLowerCase().endsWith(domain)) {
-      setMessage(`Email must end with ${domain}`);
-      return;
-    }
     const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -38,7 +33,6 @@ export default function RegisterPage() {
         <br />
         <br />
         <input className="input" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <p className="section-title" style={{ marginTop: 6 }}>Only {domain} emails are allowed.</p>
         <br />
         <br />
         <input className="input" type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />

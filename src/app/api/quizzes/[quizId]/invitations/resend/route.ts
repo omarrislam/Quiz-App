@@ -1,4 +1,5 @@
-﻿import { connectDb } from "../../../../../../server/db";
+import { NextRequest } from "next/server";
+import { connectDb } from "../../../../../../server/db";
 import { requireInstructor } from "../../../../../../server/auth/requireInstructor";
 import { ok, handleError } from "../../../../../../server/http/response";
 import { resendInvitation } from "../../../../../../server/quizzes/invitationService";

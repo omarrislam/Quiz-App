@@ -56,8 +56,22 @@ export async function sendInvitations(quizId: string) {
       await mailer.sendMail({
         from: SMTP_FROM,
         to: student.email,
-        subject: "Your Quiz Invitation",
-        text: `Quiz link: ${link}\nOTP: ${otp}`
+        subject: "Quiz Invitation: Your Access Code",
+        text: [
+          `Hello ${student.name},`,
+          "",
+          "You have been invited to take a quiz.",
+          `Quiz link: ${link}`,
+          `One-time access code (OTP): ${otp}`,
+          "",
+          "Instructions:",
+          "1) Open the quiz link.",
+          "2) Enter your name and email if prompted.",
+          "3) Enter the OTP above to start.",
+          "4) Keep this code private. It expires in 15 minutes.",
+          "",
+          "If you did not request this, please ignore this email."
+        ].join("\n")
       });
     }
     await AuditLog.create({
@@ -116,8 +130,22 @@ export async function resendInvitation(quizId: string, email: string) {
     await mailer.sendMail({
       from: SMTP_FROM,
       to: student.email,
-      subject: "Your Quiz Invitation",
-      text: `Quiz link: ${link}\nOTP: ${otp}`
+      subject: "Quiz Invitation: Your Access Code",
+      text: [
+        `Hello ${student.name},`,
+        "",
+        "You have been invited to take a quiz.",
+        `Quiz link: ${link}`,
+        `One-time access code (OTP): ${otp}`,
+        "",
+        "Instructions:",
+        "1) Open the quiz link.",
+        "2) Enter your name and email if prompted.",
+        "3) Enter the OTP above to start.",
+        "4) Keep this code private. It expires in 15 minutes.",
+        "",
+        "If you did not request this, please ignore this email."
+      ].join("\n")
     });
   }
   await AuditLog.create({
@@ -171,8 +199,22 @@ export async function sendInvitationToStudent(quizId: string, email: string) {
     await mailer.sendMail({
       from: SMTP_FROM,
       to: student.email,
-      subject: "Your Quiz Invitation",
-      text: `Quiz link: ${link}\nOTP: ${otp}`
+      subject: "Quiz Invitation: Your Access Code",
+      text: [
+        `Hello ${student.name},`,
+        "",
+        "You have been invited to take a quiz.",
+        `Quiz link: ${link}`,
+        `One-time access code (OTP): ${otp}`,
+        "",
+        "Instructions:",
+        "1) Open the quiz link.",
+        "2) Enter your name and email if prompted.",
+        "3) Enter the OTP above to start.",
+        "4) Keep this code private. It expires in 15 minutes.",
+        "",
+        "If you did not request this, please ignore this email."
+      ].join("\n")
     });
   }
   await AuditLog.create({

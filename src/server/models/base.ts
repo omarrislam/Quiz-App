@@ -1,6 +1,6 @@
-﻿import { SchemaOptions } from "mongoose";
+import { SchemaOptions } from "mongoose";
 
-export const baseSchemaOptions: SchemaOptions = {
+export const baseSchemaOptions: SchemaOptions<any> = {
   timestamps: true,
   versionKey: false
 };

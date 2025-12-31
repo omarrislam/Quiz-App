@@ -7,7 +7,7 @@ import { AttemptSnapshot } from "../../../../../server/models/AttemptSnapshot";
 export async function GET(_: Request, { params }: { params: { attemptId: string } }) {
   try {
     await connectDb();
-    const attempt = await Attempt.findOne({ _id: params.attemptId }).lean();
+    const attempt = await Attempt.findById(params.attemptId).lean();
     if (!attempt) {
       return ok({ error: "Attempt not found" }, 404);
     }

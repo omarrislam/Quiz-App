@@ -1,4 +1,4 @@
-﻿import { Schema, model, models, Types } from "mongoose";
+import { Model, Schema, model, models, Types } from "mongoose";
 import { baseSchemaOptions } from "./base";
 
 export interface AnswerDetail {
@@ -60,4 +60,7 @@ const AttemptSchema = new Schema<AttemptDocument>(
   baseSchemaOptions
 );
 
-export const Attempt = models.Attempt || model<AttemptDocument>("Attempt", AttemptSchema);
+const AttemptModel = (models.Attempt as Model<AttemptDocument>) || model<AttemptDocument>("Attempt", AttemptSchema);
+
+export const Attempt = AttemptModel;
+

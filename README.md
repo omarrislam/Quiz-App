@@ -1,6 +1,10 @@
 # Quiz Platform
 
-A Next.js 14 quiz platform with instructor dashboard, question/student management, live monitoring, and OTP-based quiz access.
+Monorepo with a Next.js 14 frontend and a Node/Express API backend for managing quizzes, students, and live monitoring.
+
+## Structure
+- `apps/frontend` - Next.js App Router UI
+- `apps/backend` - Express + MongoDB API
 
 ## Features
 - Instructor dashboard to create and manage quizzes
@@ -12,49 +16,52 @@ A Next.js 14 quiz platform with instructor dashboard, question/student managemen
 ## Tech Stack
 - Next.js 14 (App Router)
 - Node.js 20
+- Express
 - MongoDB + Mongoose
-- NextAuth (credentials)
+- JWT auth for instructors
 
-## Getting Started
+## Setup
 
 1) Install dependencies
 ```bash
 npm install
 ```
 
-2) Create a `.env` file
+2) Create environment files
+- `apps/backend/.env` (see `apps/backend/.env.example`)
+- `apps/frontend/.env` (see `apps/frontend/.env.example`)
+
+3) Run the apps (two terminals)
 ```bash
-MONGODB_URI=mongodb://localhost:27017/quiz-app
-NEXTAUTH_SECRET=replace-with-a-long-random-string
-NEXTAUTH_URL=http://localhost:3000
-APP_BASE_URL=http://localhost:3000
-DEV_EMAIL_MODE=true
-SMTP_HOST=
-SMTP_PORT=
-SMTP_USER=
-SMTP_PASS=
-SMTP_FROM=
+npm run dev:backend
+```
+```bash
+npm run dev:frontend
 ```
 
-3) Run the dev server
-```bash
-npm run dev
-```
+Frontend default: `http://localhost:3000`  
+Backend default: `http://localhost:4000`
 
 ## Environment Variables
+
+Backend (`apps/backend/.env`):
 - `MONGODB_URI` (required): MongoDB connection string
-- `NEXTAUTH_SECRET` (required in production): NextAuth secret
-- `NEXTAUTH_URL` (recommended): Base URL for auth callbacks
-- `APP_BASE_URL` (required when sending real emails): Public base URL
+- `JWT_SECRET` (required): JWT signing secret
+- `APP_BASE_URL` (required when sending real emails): Public quiz URL base
 - `DEV_EMAIL_MODE` (true/false): Logs OTPs to server console when true
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` (required when `DEV_EMAIL_MODE=false`)
+- `CORS_ORIGIN` (comma-separated list or `*`): Allowed frontend origins
+- `PORT` (optional): API port, default `4000`
+
+Frontend (`apps/frontend/.env`):
+- `NEXT_PUBLIC_API_BASE_URL` (required): Base URL of the backend API (ex: `http://localhost:4000`)
 
 ## Scripts
-- `npm run dev` - Start Next.js dev server
-- `npm run build` - Build for production
-- `npm run start` - Run production build
-- `npm run lint` - Lint
-- `npm test` - Run tests
+- `npm run dev:frontend` - Start Next.js dev server
+- `npm run dev:backend` - Start Express dev server
+- `npm run build` - Build both apps
+- `npm run lint` - Lint frontend
+- `npm test` - Run frontend tests
 
 ## Notes
 - Uploads accept CSV only for students and questions.

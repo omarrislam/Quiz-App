@@ -1,0 +1,29 @@
+import mongoose, { Model, Schema, model } from "mongoose";
+import { baseSchemaOptions } from "./base";
+
+export type InstructorRole = "instructor" | "admin";
+
+export interface InstructorDocument {
+  name: string;
+  email: string;
+  passwordHash: string;
+  role: InstructorRole;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+const InstructorSchema = new Schema<InstructorDocument>(
+  {
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    passwordHash: { type: String, required: true },
+    role: { type: String, enum: ["instructor", "admin"], default: "instructor" }
+  },
+  baseSchemaOptions
+);
+
+const InstructorModel = (mongoose.models.Instructor as Model<InstructorDocument>) || model<InstructorDocument>("Instructor", InstructorSchema);
+
+export const Instructor = InstructorModel;
+
+

@@ -474,11 +474,14 @@ quizzesRouter.get("/:quizId/audit", async (req, res) => {
     await connectDb();
     await assertQuizOwnership(userId, req.params.quizId);
     const logs = await AuditLog.find({ quizId: req.params.quizId }).sort({ createdAt: -1 }).lean();
-    const attemptIds = logs.map((log) => log.meta?.attemptId).filter(Boolean);
+    const attemptIds = logs
+      .map((log) => (log.meta?.attemptId ? String(log.meta.attemptId) : ""))
+      .filter((id) => Boolean(id));
     const attempts = await Attempt.find({ _id: { $in: attemptIds } }).lean();
     const attemptMap = new Map(attempts.map((a) => [a._id.toString(), a]));
     const rows = logs.map((log) => {
-      const attempt = log.meta?.attemptId ? attemptMap.get(log.meta.attemptId) : null;
+      const attemptId = log.meta?.attemptId ? String(log.meta.attemptId) : "";
+      const attempt = attemptId ? attemptMap.get(attemptId) : null;
       return {
         id: log._id.toString(),
         type: log.type,

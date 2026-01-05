@@ -14,6 +14,7 @@ type QuizSettings = {
   requireFullscreen: boolean;
   logSuspiciousActivity: boolean;
   enableWebcamSnapshots: boolean;
+  enableFaceCentering: boolean;
 };
 
 export default function QuizSettingsPage({ params }: { params: { quizId: string } }) {
@@ -28,7 +29,8 @@ export default function QuizSettingsPage({ params }: { params: { quizId: string 
     shuffleOptions: true,
     requireFullscreen: true,
     logSuspiciousActivity: true,
-    enableWebcamSnapshots: false
+    enableWebcamSnapshots: false,
+    enableFaceCentering: false
   });
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
@@ -57,7 +59,8 @@ export default function QuizSettingsPage({ params }: { params: { quizId: string 
             shuffleOptions: Boolean(data.settings?.shuffleOptions),
             requireFullscreen: Boolean(data.settings?.requireFullscreen),
             logSuspiciousActivity: Boolean(data.settings?.logSuspiciousActivity),
-            enableWebcamSnapshots: Boolean(data.settings?.enableWebcamSnapshots)
+            enableWebcamSnapshots: Boolean(data.settings?.enableWebcamSnapshots),
+            enableFaceCentering: Boolean(data.settings?.enableFaceCentering)
           });
         }
       })
@@ -186,6 +189,15 @@ export default function QuizSettingsPage({ params }: { params: { quizId: string 
             onChange={(e) => setSettings({ ...settings, enableWebcamSnapshots: e.target.checked })}
           />
           &nbsp;Enable webcam snapshots (3 per attempt)
+        </label>
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={settings.enableFaceCentering}
+            onChange={(e) => setSettings({ ...settings, enableFaceCentering: e.target.checked })}
+          />
+          &nbsp;Require face centered during exam
         </label>
         <br />
         <br />

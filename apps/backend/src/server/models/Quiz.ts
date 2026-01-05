@@ -11,6 +11,7 @@ export interface QuizSettings {
   requireFullscreen: boolean;
   logSuspiciousActivity: boolean;
   enableWebcamSnapshots: boolean;
+  enableFaceCentering: boolean;
   allowMultipleAttempts: boolean;
   showScoreToStudent: boolean;
   mobileAllowed: boolean;
@@ -44,6 +45,7 @@ const QuizSchema = new Schema<QuizDocument>(
       requireFullscreen: { type: Boolean, default: false },
       logSuspiciousActivity: { type: Boolean, default: true },
       enableWebcamSnapshots: { type: Boolean, default: false },
+      enableFaceCentering: { type: Boolean, default: false },
       allowMultipleAttempts: { type: Boolean, default: false },
       showScoreToStudent: { type: Boolean, default: false },
       mobileAllowed: { type: Boolean, default: true },

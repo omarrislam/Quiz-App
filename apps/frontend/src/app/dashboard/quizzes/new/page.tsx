@@ -16,6 +16,7 @@ export default function NewQuizPage() {
   const [requireFullscreen, setRequireFullscreen] = useState(true);
   const [logSuspiciousActivity, setLogSuspiciousActivity] = useState(true);
   const [enableWebcamSnapshots, setEnableWebcamSnapshots] = useState(false);
+  const [enableFaceCentering, setEnableFaceCentering] = useState(false);
   const [creating, setCreating] = useState(false);
 
   async function submit() {
@@ -31,7 +32,8 @@ export default function NewQuizPage() {
       shuffleOptions,
       requireFullscreen,
       logSuspiciousActivity,
-      enableWebcamSnapshots
+      enableWebcamSnapshots,
+      enableFaceCentering
     };
 
     await apiFetch("/api/quizzes", {
@@ -96,6 +98,11 @@ export default function NewQuizPage() {
         <label>
           <input type="checkbox" checked={enableWebcamSnapshots} onChange={(e) => setEnableWebcamSnapshots(e.target.checked)} />
           &nbsp;Enable webcam snapshots (3 per attempt)
+        </label>
+        <br />
+        <label>
+          <input type="checkbox" checked={enableFaceCentering} onChange={(e) => setEnableFaceCentering(e.target.checked)} />
+          &nbsp;Require face centered during exam
         </label>
         <br />
         <br />

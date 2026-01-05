@@ -16,6 +16,7 @@ type Props = {
   requireFullscreen: boolean;
   logSuspiciousActivity: boolean;
   enableWebcamSnapshots: boolean;
+  enableFaceCentering: boolean;
   onFinish: (result: ResultPayload) => void;
 };
 
@@ -30,6 +31,7 @@ export default function QuizClient({
   requireFullscreen,
   logSuspiciousActivity,
   enableWebcamSnapshots,
+  enableFaceCentering,
   onFinish
 }: Props) {
   const [index, setIndex] = useState(0);
@@ -48,6 +50,14 @@ export default function QuizClient({
   const [webcamActive, setWebcamActive] = useState(false);
   const [webcamReady, setWebcamReady] = useState(false);
   const [webcamError, setWebcamError] = useState("");
+  const [faceStatus, setFaceStatus] = useState<"ok" | "off_center" | "missing">("missing");
+  const faceCheckRef = useRef(false);
+  const faceDetectorRef = useRef<any>(null);
+  const faceStatusRef = useRef<"ok" | "off_center" | "missing">("missing");
+  const [faceWarningSeconds, setFaceWarningSeconds] = useState(0);
+
+  const autoSubmitThresholdSeconds = 15;
+  const webcamRequired = enableWebcamSnapshots || enableFaceCentering;
 
   const isDesktop = useMemo(() => {
     if (typeof window === "undefined") return false;
@@ -79,6 +89,9 @@ export default function QuizClient({
     }
     setWebcamActive(false);
     setWebcamReady(false);
+    setFaceStatus("missing");
+    faceStatusRef.current = "missing";
+    setFaceWarningSeconds(0);
   }
 
   async function ensureVideoReady(retries = 6, delayMs = 200) {
@@ -214,7 +227,7 @@ export default function QuizClient({
   }, [requireFullscreen, isDesktop]);
 
   useEffect(() => {
-    if (!enableWebcamSnapshots) return;
+    if (!webcamRequired) return;
     let active = true;
     const run = async () => {
       await startWebcam();
@@ -227,7 +240,92 @@ export default function QuizClient({
       active = false;
       stopWebcam();
     };
-  }, [enableWebcamSnapshots]);
+  }, [webcamRequired]);
+
+  useEffect(() => {
+    faceStatusRef.current = faceStatus;
+    if (faceStatus === "ok") {
+      setFaceWarningSeconds(0);
+    }
+  }, [faceStatus]);
+
+  useEffect(() => {
+    if (!enableFaceCentering || !webcamActive || !webcamReady) {
+      setFaceStatus("missing");
+      return;
+    }
+    let cancelled = false;
+    let intervalId: number | null = null;
+    const setup = async () => {
+      const { FaceDetection } = await import("@mediapipe/face_detection");
+      if (cancelled) return;
+      const detector = new FaceDetection({
+        locateFile: (file: string) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`
+      });
+      detector.setOptions({ model: "short", minDetectionConfidence: 0.5 });
+      detector.onResults((results: any) => {
+        if (cancelled) return;
+        const detections = results?.detections || [];
+        if (!detections.length) {
+          setFaceStatus("missing");
+          return;
+        }
+        const box = detections[0]?.boundingBox || {};
+        let xCenter = typeof box.xCenter === "number" ? box.xCenter : null;
+        let yCenter = typeof box.yCenter === "number" ? box.yCenter : null;
+        if (xCenter == null || yCenter == null) {
+          const xMin = typeof box.xMin === "number" ? box.xMin : null;
+          const yMin = typeof box.yMin === "number" ? box.yMin : null;
+          const width = typeof box.width === "number" ? box.width : null;
+          const height = typeof box.height === "number" ? box.height : null;
+          if (xMin != null && yMin != null && width != null && height != null) {
+            xCenter = xMin + width / 2;
+            yCenter = yMin + height / 2;
+          }
+        }
+        if (xCenter == null || yCenter == null) {
+          setFaceStatus("missing");
+          return;
+        }
+        const video = videoRef.current;
+        if (!video || !video.videoWidth || !video.videoHeight) {
+          setFaceStatus("missing");
+          return;
+        }
+        const normalizedX = xCenter > 1 ? xCenter / video.videoWidth : xCenter;
+        const normalizedY = yCenter > 1 ? yCenter / video.videoHeight : yCenter;
+        const threshold = 0.25;
+        const offCenter =
+          Math.abs(normalizedX - 0.5) > threshold || Math.abs(normalizedY - 0.5) > threshold;
+        setFaceStatus(offCenter ? "off_center" : "ok");
+      });
+      faceDetectorRef.current = detector;
+      intervalId = window.setInterval(async () => {
+        const video = videoRef.current;
+        if (!video || faceCheckRef.current) return;
+        faceCheckRef.current = true;
+        try {
+          await detector.send({ image: video });
+        } catch {
+          setFaceStatus("missing");
+        } finally {
+          faceCheckRef.current = false;
+        }
+      }, 500);
+    };
+    setup();
+
+    return () => {
+      cancelled = true;
+      if (intervalId) {
+        window.clearInterval(intervalId);
+      }
+      if (faceDetectorRef.current?.close) {
+        faceDetectorRef.current.close();
+      }
+      faceDetectorRef.current = null;
+    };
+  }, [enableFaceCentering, webcamActive, webcamReady]);
 
   useEffect(() => {
     const id = window.requestAnimationFrame(() => {
@@ -314,14 +412,31 @@ export default function QuizClient({
 
   useEffect(() => {
     const timer = setInterval(() => {
-      if (paused || !ready) return;
-      setRemaining((prev) => prev - 1);
-      if (totalTimeSeconds) {
-        setExamRemaining((prev) => prev - 1);
-      }
-    }, 1000);
+    if (paused || !ready) return;
+    setRemaining((prev) => prev - 1);
+    if (totalTimeSeconds) {
+      setExamRemaining((prev) => prev - 1);
+    }
+  }, 1000);
     return () => clearInterval(timer);
   }, [paused, totalTimeSeconds, ready]);
+
+  useEffect(() => {
+    if (!enableFaceCentering) return;
+    const timer = setInterval(() => {
+      if (faceStatusRef.current === "ok") {
+        return;
+      }
+      setFaceWarningSeconds((prev) => {
+        const next = prev + 1;
+        if (next >= autoSubmitThresholdSeconds) {
+          submitNow();
+        }
+        return next;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [enableFaceCentering]);
 
   useEffect(() => {
     const poll = setInterval(() => {
@@ -447,11 +562,37 @@ export default function QuizClient({
         <h1 className="header-title">{title}</h1>
         <p className="header-subtitle">Good Luck - fullscreen is required on desktop</p>
       </div>
-      {enableWebcamSnapshots ? (
+      {webcamRequired ? (
         <div className="card">
-          <p className="section-title" style={{ marginBottom: 6 }}>Webcam snapshots enabled</p>
+          <p className="section-title" style={{ marginBottom: 6 }}>
+            {enableFaceCentering
+              ? "Webcam monitoring enabled"
+              : "Webcam snapshots enabled"}
+          </p>
           {webcamActive ? (
-            <p>Camera connected. Snapshots will be captured automatically.</p>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              {enableFaceCentering ? (
+                <span
+                  style={{
+                    padding: "4px 10px",
+                    borderRadius: 999,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    background: faceStatus === "ok" ? "#dcfce7" : faceStatus === "off_center" ? "#fef3c7" : "#fee2e2",
+                    color: faceStatus === "ok" ? "#166534" : faceStatus === "off_center" ? "#92400e" : "#991b1b"
+                  }}
+                >
+                  {faceStatus === "ok" ? "Face centered" : faceStatus === "off_center" ? "Face off-center" : "Face not detected"}
+                </span>
+              ) : null}
+              <p style={{ margin: 0 }}>
+                {enableFaceCentering
+                  ? faceStatus === "ok"
+                    ? "Camera connected. Snapshots will be captured automatically."
+                    : `Please center your face. Auto-submit in ${Math.max(0, autoSubmitThresholdSeconds - faceWarningSeconds)}s.`
+                  : "Camera connected. Snapshots will be captured automatically."}
+              </p>
+            </div>
           ) : (
             <>
               <p>{webcamError || "Camera access is required to continue with snapshots."}</p>

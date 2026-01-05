@@ -40,7 +40,8 @@ quizzesRouter.get("/:quizId/public", async (req, res) => {
     return ok(res, {
       title: quiz.title,
       questionTimeSeconds: quiz.settings?.questionTimeSeconds || 35,
-      enableWebcamSnapshots: Boolean(quiz.settings?.enableWebcamSnapshots)
+      enableWebcamSnapshots: Boolean(quiz.settings?.enableWebcamSnapshots),
+      enableFaceCentering: Boolean(quiz.settings?.enableFaceCentering)
     });
   } catch (error) {
     return handleError(res, error);
@@ -87,6 +88,7 @@ quizzesRouter.post("/:quizId/verify-otp", async (req, res) => {
         requireFullscreen: quiz.settings.requireFullscreen,
         logSuspiciousActivity: quiz.settings.logSuspiciousActivity,
         enableWebcamSnapshots: quiz.settings.enableWebcamSnapshots,
+        enableFaceCentering: quiz.settings.enableFaceCentering,
         totalTimeSeconds: quiz.settings.totalTimeSeconds || null
       },
       questions: shuffledQuestions.map((q) => ({

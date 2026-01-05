@@ -15,6 +15,7 @@ type QuizPayload = {
     requireFullscreen: boolean;
     logSuspiciousActivity: boolean;
     enableWebcamSnapshots: boolean;
+    enableFaceCentering: boolean;
     totalTimeSeconds: number | null;
   };
 };
@@ -27,6 +28,7 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
   const [quizTitle, setQuizTitle] = useState("Quiz");
   const [questionTimeSeconds, setQuestionTimeSeconds] = useState<number | null>(null);
   const [webcamRequired, setWebcamRequired] = useState<boolean | null>(null);
+  const [faceCenteringRequired, setFaceCenteringRequired] = useState(false);
   const [webcamGranted, setWebcamGranted] = useState(false);
   const [webcamError, setWebcamError] = useState("");
   const [name, setName] = useState("");
@@ -62,7 +64,9 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
           setQuestionTimeSeconds(data.questionTimeSeconds);
         }
         if (typeof data?.enableWebcamSnapshots === "boolean") {
-          setWebcamRequired(data.enableWebcamSnapshots);
+          const webcamNeeded = Boolean(data.enableWebcamSnapshots) || Boolean(data.enableFaceCentering);
+          setWebcamRequired(webcamNeeded);
+          setFaceCenteringRequired(Boolean(data.enableFaceCentering));
         }
       })
       .catch(() => {});
@@ -152,6 +156,7 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
         requireFullscreen={quiz.settings.requireFullscreen}
         logSuspiciousActivity={quiz.settings.logSuspiciousActivity}
         enableWebcamSnapshots={quiz.settings.enableWebcamSnapshots}
+        enableFaceCentering={quiz.settings.enableFaceCentering}
         onFinish={setResult}
       />
     );
@@ -205,7 +210,9 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
               ? "Checking quiz requirements..."
               : webcamRequired
               ? webcamGranted
-                ? "Webcam permission granted."
+                ? faceCenteringRequired
+                  ? "Webcam permission granted. Face centering required during exam."
+                  : "Webcam permission granted."
                 : "Webcam access required to start."
               : "Webcam not required for this quiz."}
           </span>

@@ -104,10 +104,13 @@ attemptsRouter.get("/:attemptId/detail", async (req, res) => {
     const details = attempt.score?.details || [];
     const answers = details.map((detail) => {
       const q = map.get(detail.questionId.toString());
+      const selectedByText = detail.selectedOption && q?.options
+        ? q.options.indexOf(detail.selectedOption)
+        : -1;
       return {
         question: q?.text || "Unknown question",
         options: q?.options || [],
-        selectedIndex: detail.selectedIndex,
+        selectedIndex: selectedByText >= 0 ? selectedByText : detail.selectedIndex,
         correctIndex: q?.correctIndex ?? null
       };
     });

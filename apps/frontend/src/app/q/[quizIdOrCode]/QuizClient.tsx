@@ -50,6 +50,8 @@ export default function QuizClient({
   const [webcamActive, setWebcamActive] = useState(false);
   const [webcamReady, setWebcamReady] = useState(false);
   const [webcamError, setWebcamError] = useState("");
+  const [webcamStarting, setWebcamStarting] = useState(false);
+  const [webcamPermission, setWebcamPermission] = useState<"granted" | "denied" | "prompt" | "unknown">("unknown");
   const [faceStatus, setFaceStatus] = useState<"ok" | "off_center" | "missing">("missing");
   const faceCheckRef = useRef(false);
   const faceDetectorRef = useRef<any>(null);
@@ -87,6 +89,11 @@ export default function QuizClient({
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
+    const video = videoRef.current;
+    if (video) {
+      video.pause();
+      (video as HTMLVideoElement).srcObject = null;
+    }
     setWebcamActive(false);
     setWebcamReady(false);
     setFaceStatus("missing");
@@ -107,11 +114,13 @@ export default function QuizClient({
   }
 
   async function startWebcam() {
+    if (webcamStarting || webcamActive) return;
     if (!navigator.mediaDevices?.getUserMedia) {
       setWebcamError("Camera not supported in this browser.");
       return;
     }
     setWebcamError("");
+    setWebcamStarting(true);
     setWebcamReady(false);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -119,20 +128,28 @@ export default function QuizClient({
         audio: false
       });
       streamRef.current = stream;
+      setWebcamActive(true);
       const video = videoRef.current;
       if (video) {
         video.srcObject = stream;
         video.onloadedmetadata = () => setWebcamReady(true);
+        video.onloadeddata = () => setWebcamReady(true);
         await video.play().catch(() => {});
       }
+      window.setTimeout(() => {
+        if (streamRef.current && !webcamReady) {
+          setWebcamReady(true);
+        }
+      }, 800);
       const [track] = stream.getVideoTracks();
       if (track) {
         track.addEventListener("ended", () => {
           stopWebcam();
-          setWebcamError("Camera disconnected. Click Enable Camera to reconnect.");
+          setWebcamError("Camera disconnected. Please allow permissions to reconnect.");
         });
       }
-      setWebcamActive(true);
+      setWebcamStarting(false);
+      sessionStorage.setItem("qp_webcam_granted", "true");
     } catch (error) {
       const message = error instanceof Error ? error.name : "Camera access blocked.";
       if (message === "NotAllowedError") {
@@ -143,6 +160,8 @@ export default function QuizClient({
         setWebcamError("Unable to access camera.");
       }
       setWebcamActive(false);
+      setWebcamStarting(false);
+      sessionStorage.setItem("qp_webcam_granted", "false");
     }
   }
 
@@ -227,6 +246,7 @@ export default function QuizClient({
   }, [requireFullscreen, isDesktop]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     if (!webcamRequired) return;
     let active = true;
     const run = async () => {
@@ -241,6 +261,25 @@ export default function QuizClient({
       stopWebcam();
     };
   }, [webcamRequired]);
+
+  useEffect(() => {
+    if (typeof navigator === "undefined") return;
+    if (!(navigator as any).permissions?.query) return;
+    let active = true;
+    (navigator as any).permissions
+      .query({ name: "camera" })
+      .then((status: any) => {
+        if (!active) return;
+        setWebcamPermission(status.state || "unknown");
+        status.onchange = () => {
+          setWebcamPermission(status.state || "unknown");
+        };
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     faceStatusRef.current = faceStatus;
@@ -412,12 +451,12 @@ export default function QuizClient({
 
   useEffect(() => {
     const timer = setInterval(() => {
-    if (paused || !ready) return;
-    setRemaining((prev) => prev - 1);
-    if (totalTimeSeconds) {
-      setExamRemaining((prev) => prev - 1);
-    }
-  }, 1000);
+      if (paused || !ready) return;
+      setRemaining((prev) => Math.max(0, prev - 1));
+      if (totalTimeSeconds) {
+        setExamRemaining((prev) => Math.max(0, prev - 1));
+      }
+    }, 1000);
     return () => clearInterval(timer);
   }, [paused, totalTimeSeconds, ready]);
 
@@ -456,7 +495,7 @@ export default function QuizClient({
   useEffect(() => {
     if (!ready) return;
     if (remaining <= 0) {
-      goNext();
+      goNext(true);
     }
   }, [remaining, ready]);
 
@@ -473,6 +512,12 @@ export default function QuizClient({
       stopWebcam();
     }
   }, [forceEnded]);
+
+  useEffect(() => {
+    return () => {
+      stopWebcam();
+    };
+  }, []);
 
   useEffect(() => {
     if (!overlay) return;
@@ -531,8 +576,8 @@ export default function QuizClient({
     }
   }
 
-  async function goNext() {
-    if (answers[current.id] == null) {
+  async function goNext(force = false) {
+    if (!force && answers[current.id] == null) {
       return;
     }
     if (index + 1 < questions.length) {
@@ -595,8 +640,14 @@ export default function QuizClient({
             </div>
           ) : (
             <>
-              <p>{webcamError || "Camera access is required to continue with snapshots."}</p>
-              <button className="button-secondary" onClick={startWebcam}>Enable Camera</button>
+              <p>
+                {webcamStarting
+                  ? "Connecting to camera..."
+                  : webcamError ||
+                    (webcamPermission === "denied"
+                      ? "Camera blocked. Allow permissions in your browser to continue."
+                      : "Camera access is required. Please allow webcam permissions in your browser.")}
+              </p>
             </>
           )}
         </div>
@@ -624,7 +675,7 @@ export default function QuizClient({
           </div>
         ))}
         <div className="button-row">
-          <button className="button" onClick={goNext} disabled={answers[current.id] == null}>
+          <button className="button" onClick={() => goNext(false)} disabled={answers[current.id] == null}>
             {index + 1 === total ? "Finish" : "Next"}
           </button>
           <button className="button-secondary" onClick={submitNow}>Quit</button>

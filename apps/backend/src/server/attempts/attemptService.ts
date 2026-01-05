@@ -53,6 +53,7 @@ export async function finishAttempt(
     return {
       questionId,
       selectedIndex: answer.selectedIndex,
+      selectedOption,
       isCorrect
     };
   });

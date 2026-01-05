@@ -76,15 +76,19 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
     setWebcamError("");
     if (!navigator.mediaDevices?.getUserMedia) {
       setWebcamError("Camera not supported in this browser.");
-      return;
+      return false;
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
       stream.getTracks().forEach((track) => track.stop());
       setWebcamGranted(true);
+      sessionStorage.setItem("qp_webcam_granted", "true");
+      return true;
     } catch {
       setWebcamError("Camera access blocked. Please allow permission.");
       setWebcamGranted(false);
+      sessionStorage.setItem("qp_webcam_granted", "false");
+      return false;
     }
   }
 
@@ -106,6 +110,13 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
   async function verify() {
     setError("");
     setMessage("");
+    if (webcamRequired) {
+      const granted = webcamGranted || (await requestWebcamAccess());
+      if (!granted) {
+        setError("Webcam access is required to start this quiz.");
+        return;
+      }
+    }
     const res = await apiFetch(`/api/quizzes/${params.quizIdOrCode}/verify-otp`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

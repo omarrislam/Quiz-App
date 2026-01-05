@@ -4,6 +4,7 @@ import { baseSchemaOptions } from "./base";
 export interface AnswerDetail {
   questionId: Types.ObjectId;
   selectedIndex: number | null;
+  selectedOption?: string | null;
   isCorrect: boolean;
 }
 

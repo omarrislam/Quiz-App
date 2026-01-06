@@ -12,6 +12,8 @@ Monorepo with a Next.js 14 frontend and a Node/Express API backend for managing 
 - Live monitor with attempt stats and controls
 - OTP invitations (dev mode or SMTP)
 - Optional webcam snapshots (start/middle/end) stored in MongoDB with 5-day TTL
+- Optional face centering monitoring (webcam required)
+- Mobile-friendly dashboard layout
 
 ## Tech Stack
 - Next.js 14 (App Router)
@@ -19,6 +21,7 @@ Monorepo with a Next.js 14 frontend and a Node/Express API backend for managing 
 - Express
 - MongoDB + Mongoose
 - JWT auth for instructors
+- MediaPipe Face Detection (optional monitoring)
 
 ## Setup
 
@@ -65,4 +68,4 @@ Frontend (`apps/frontend/.env`):
 
 ## Notes
 - Uploads accept CSV only for students and questions.
-- Webcam snapshots are optional per-quiz and shown in attempt details.
+- Webcam snapshots and face centering are optional per-quiz and shown in attempt details.

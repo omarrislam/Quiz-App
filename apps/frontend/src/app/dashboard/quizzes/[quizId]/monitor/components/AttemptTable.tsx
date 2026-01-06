@@ -37,50 +37,52 @@ export default function AttemptTable({ attempts, quizId, onEnded }: Props) {
   }
 
   return (
-    <table>
-      <thead>
-        <tr>
-          <th>Student</th>
-          <th>Email</th>
-          <th>Status</th>
-          <th>Score</th>
-          <th>Suspicious</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {attempts.map((attempt) => (
-          <tr key={attempt._id}>
-            <td>
-              <a href={`/dashboard/quizzes/${quizId}/monitor/${attempt._id}`}>{attempt.studentName}</a>
-            </td>
-            <td>{attempt.studentEmail}</td>
-            <td>{attempt.status}</td>
-            <td>{attempt.score ? `${attempt.score.correctCount}/${attempt.score.totalQuestions}` : "-"}</td>
-            <td className={attempt.flags && attempt.flags.suspiciousEventsCount >= suspiciousThreshold ? "suspicious" : ""}>
-              {attempt.flags?.suspiciousEventsCount ?? 0}
-            </td>
-            <td>
-              <div className="table-actions inline">
-                <button
-                  className="button-secondary"
-                  onClick={() => endAttempt(attempt._id)}
-                  disabled={attempt.status !== "in_progress" || Boolean(ending[attempt._id])}
-                >
-                  {attempt.status === "in_progress" ? "End" : "Ended"}
-                </button>
-                <button
-                  className="button-secondary"
-                  onClick={() => removeAttempt(attempt._id)}
-                  disabled={Boolean(removing[attempt._id])}
-                >
-                  Remove
-                </button>
-              </div>
-            </td>
+    <div className="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th>Score</th>
+            <th>Suspicious</th>
+            <th>Actions</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {attempts.map((attempt) => (
+            <tr key={attempt._id}>
+              <td>
+                <a href={`/dashboard/quizzes/${quizId}/monitor/${attempt._id}`}>{attempt.studentName}</a>
+              </td>
+              <td>{attempt.studentEmail}</td>
+              <td>{attempt.status}</td>
+              <td>{attempt.score ? `${attempt.score.correctCount}/${attempt.score.totalQuestions}` : "-"}</td>
+              <td className={attempt.flags && attempt.flags.suspiciousEventsCount >= suspiciousThreshold ? "suspicious" : ""}>
+                {attempt.flags?.suspiciousEventsCount ?? 0}
+              </td>
+              <td>
+                <div className="table-actions inline">
+                  <button
+                    className="button-secondary"
+                    onClick={() => endAttempt(attempt._id)}
+                    disabled={attempt.status !== "in_progress" || Boolean(ending[attempt._id])}
+                  >
+                    {attempt.status === "in_progress" ? "End" : "Ended"}
+                  </button>
+                  <button
+                    className="button-secondary"
+                    onClick={() => removeAttempt(attempt._id)}
+                    disabled={Boolean(removing[attempt._id])}
+                  >
+                    Remove
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

@@ -190,11 +190,10 @@ export default function StudentsPage({ params }: { params: { quizId: string } })
           <h2 style={{ margin: 0 }}>Current Students</h2>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
             <input
-              className="input"
+              className="input filter-input"
               placeholder="Search by name"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              style={{ width: 320, flex: "0 1 320px" }}
             />
             <button className="button-secondary" onClick={deleteAll} style={{ whiteSpace: "nowrap" }} disabled={deletingAll}>
               {deletingAll ? "Deleting..." : "Delete All"}

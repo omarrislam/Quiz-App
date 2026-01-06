@@ -61,7 +61,7 @@ export default function DashboardPage() {
         <h1 className="header-title">Instructor Dashboard</h1>
         <p className="header-subtitle">Manage your quizzes and monitor results.</p>
       </div>
-      <div className="card" style={{ display: "flex", gap: 12, alignItems: "center" }}>
+      <div className="card" style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
         <input
           className="input"
           placeholder="Search quiz by title"

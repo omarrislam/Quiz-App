@@ -385,6 +385,17 @@ thead th {
   white-space: nowrap;
 }
 
+.filter-input {
+  width: 320px;
+  flex: 0 1 320px;
+}
+
+.table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .link-row {
   display: inline-flex;
   align-items: center;
@@ -494,14 +505,54 @@ thead th {
     gap: 6px;
   }
 
+  .status-cell,
+  .actions-cell {
+    justify-self: start;
+  }
+
+  .table-actions.inline {
+    flex-direction: column;
+    align-items: stretch;
+    flex-wrap: wrap;
+    white-space: normal;
+  }
+
+  .filter-input {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table table,
+  .table-scroll table {
+    min-width: 560px;
+  }
+
+  table {
+    word-break: break-word;
+  }
+
+  th, td {
+    white-space: normal;
+  }
+
   .page-actions {
     flex-direction: column;
     align-items: stretch;
   }
 
   .link-row {
-    white-space: normal;
     flex-wrap: wrap;
+    white-space: normal;
+    gap: 8px;
+  }
+
+  .link-row span {
+    display: none;
   }
 
   th, td {

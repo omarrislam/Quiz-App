@@ -56,26 +56,28 @@ export default function AuditPage({ params }: { params: { quizId: string } }) {
           <p>No audit events yet.</p>
         ) : (
           <div className="table">
-            <table>
-              <thead>
-                <tr>
-                  <th>Time</th>
-                  <th>Type</th>
-                  <th>Message</th>
-                  <th>Student</th>
-                </tr>
-              </thead>
-              <tbody>
+            <div className="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Type</th>
+                    <th>Message</th>
+                    <th>Student</th>
+                  </tr>
+                </thead>
+                <tbody>
                 {filtered.map((item) => (
                   <tr key={item.id}>
-                    <td>{new Date(item.timestamp).toLocaleString()}</td>
-                    <td>{item.type}</td>
-                    <td>{item.message}</td>
-                    <td>{item.studentName || item.studentEmail || "-"}</td>
+                    <td data-label="Time">{new Date(item.timestamp).toLocaleString()}</td>
+                    <td data-label="Type">{item.type}</td>
+                    <td data-label="Message">{item.message}</td>
+                    <td data-label="Student">{item.studentName || item.studentEmail || "-"}</td>
                   </tr>
                 ))}
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

@@ -166,97 +166,99 @@ export default function QuestionsPage({ params }: { params: { quizId: string } }
           <p>No questions uploaded yet.</p>
         ) : (
           <div className="table">
-            <table>
-              <thead>
-                <tr>
-                  <th>Question</th>
-                  <th>Options</th>
-                  <th>Correct</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((question) => (
-                  <tr key={question._id}>
-                    <td>
-                      {editingId === question._id ? (
-                        <textarea
-                          className="input"
-                          rows={3}
-                          value={editText}
-                          onChange={(e) => setEditText(e.target.value)}
-                        />
-                      ) : (
-                        question.text
-                      )}
-                    </td>
-                    <td>
-                      {editingId === question._id ? (
-                        <div style={{ display: "grid", gap: 6 }}>
-                          {["A", "B", "C", "D"].map((label, idx) => (
-                            <input
-                              key={label}
-                              className="input"
-                              placeholder={`Option ${label}`}
-                              value={editOptions[idx] || ""}
-                              onChange={(e) => {
-                                const next = [...editOptions];
-                                next[idx] = e.target.value;
-                                setEditOptions(next);
-                              }}
-                            />
-                          ))}
-                        </div>
-                      ) : (
-                        question.options.join(", ")
-                      )}
-                    </td>
-                    <td>
-                      {editingId === question._id ? (
-                        <select className="input" value={editCorrect} onChange={(e) => setEditCorrect(e.target.value)}>
-                          {["A", "B", "C", "D"].map((label) => (
-                            <option key={label} value={label}>{label}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        ["A", "B", "C", "D"][question.correctIndex || 0]
-                      )}
-                    </td>
-                    <td>
-                      {editingId === question._id ? (
-                        <div className="table-actions">
-                          <button className="button" onClick={() => saveQuestion(question._id)}>Save</button>
-                          <button className="button-secondary" onClick={() => setEditingId(null)}>Cancel</button>
-                        </div>
-                      ) : (
-                        <div className="table-actions inline">
-                          <button
-                            className="button-secondary"
-                            onClick={() => {
-                              setEditingId(question._id);
-                              setEditText(question.text);
-                              setEditOptions([
-                                question.options[0] || "",
-                                question.options[1] || "",
-                                question.options[2] || "",
-                                question.options[3] || ""
-                              ]);
-                              const correctLetter = ["A", "B", "C", "D"][question.correctIndex || 0];
-                              setEditCorrect(correctLetter);
-                            }}
-                          >
-                            Edit
-                          </button>
-                          <button className="button-secondary" onClick={() => deleteQuestion(question._id)}>
-                            Delete
-                          </button>
-                        </div>
-                      )}
-                    </td>
+            <div className="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Question</th>
+                    <th>Options</th>
+                    <th>Correct</th>
+                    <th>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filtered.map((question) => (
+                    <tr key={question._id}>
+                      <td data-label="Question">
+                        {editingId === question._id ? (
+                          <textarea
+                            className="input"
+                            rows={3}
+                            value={editText}
+                            onChange={(e) => setEditText(e.target.value)}
+                          />
+                        ) : (
+                          question.text
+                        )}
+                      </td>
+                      <td data-label="Options">
+                        {editingId === question._id ? (
+                          <div style={{ display: "grid", gap: 6 }}>
+                            {["A", "B", "C", "D"].map((label, idx) => (
+                              <input
+                                key={label}
+                                className="input"
+                                placeholder={`Option ${label}`}
+                                value={editOptions[idx] || ""}
+                                onChange={(e) => {
+                                  const next = [...editOptions];
+                                  next[idx] = e.target.value;
+                                  setEditOptions(next);
+                                }}
+                              />
+                            ))}
+                          </div>
+                        ) : (
+                          question.options.join(", ")
+                        )}
+                      </td>
+                      <td data-label="Correct">
+                        {editingId === question._id ? (
+                          <select className="input" value={editCorrect} onChange={(e) => setEditCorrect(e.target.value)}>
+                            {["A", "B", "C", "D"].map((label) => (
+                              <option key={label} value={label}>{label}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          ["A", "B", "C", "D"][question.correctIndex || 0]
+                        )}
+                      </td>
+                      <td data-label="Actions">
+                        {editingId === question._id ? (
+                          <div className="table-actions">
+                            <button className="button" onClick={() => saveQuestion(question._id)}>Save</button>
+                            <button className="button-secondary" onClick={() => setEditingId(null)}>Cancel</button>
+                          </div>
+                        ) : (
+                          <div className="table-actions inline">
+                            <button
+                              className="button-secondary"
+                              onClick={() => {
+                                setEditingId(question._id);
+                                setEditText(question.text);
+                                setEditOptions([
+                                  question.options[0] || "",
+                                  question.options[1] || "",
+                                  question.options[2] || "",
+                                  question.options[3] || ""
+                                ]);
+                                const correctLetter = ["A", "B", "C", "D"][question.correctIndex || 0];
+                                setEditCorrect(correctLetter);
+                              }}
+                            >
+                              Edit
+                            </button>
+                            <button className="button-secondary" onClick={() => deleteQuestion(question._id)}>
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

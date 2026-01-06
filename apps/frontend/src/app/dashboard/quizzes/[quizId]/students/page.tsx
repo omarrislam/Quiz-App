@@ -161,7 +161,7 @@ export default function StudentsPage({ params }: { params: { quizId: string } })
           <button className="button" onClick={upload} disabled={uploading}>
             {uploading ? "Uploading..." : "Upload"}
           </button>
-          <button className="button" onClick={sendInvites} style={{ marginLeft: 8 }} disabled={sendingInvites}>
+          <button className="button" onClick={sendInvites} disabled={sendingInvites}>
             {sendingInvites ? "Sending..." : "Send Invitations"}
           </button>
           {uploading ? (
@@ -204,65 +204,67 @@ export default function StudentsPage({ params }: { params: { quizId: string } })
           <p>No students uploaded yet.</p>
         ) : (
           <div className="table">
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Student ID</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((student) => (
-                  <tr key={student._id}>
-                    <td>{student.name}</td>
-                    <td>{student.email}</td>
-                    <td>{student.externalId || "-"}</td>
-                    <td>
-                      {editingId === student._id ? (
-                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                          <input
-                            className="input"
-                            value={emailDraft}
-                            onChange={(e) => setEmailDraft(e.target.value)}
-                            style={{ minWidth: 220 }}
-                          />
-                          <button className="button" onClick={() => saveEmail(student._id)}>Save</button>
-                          <button
-                            className="button-secondary"
-                            onClick={() => {
-                              setEditingId(null);
-                              setEmailDraft("");
-                            }}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="table-actions inline">
-                          <button className="button-secondary" onClick={() => sendInvite(student.email)} disabled={sendingEmail === student.email}>
-                            {sendingEmail === student.email ? "Sending..." : "Send Invite"}
-                          </button>
-                          <button
-                            className="button-secondary"
-                            onClick={() => {
-                              setEditingId(student._id);
-                              setEmailDraft(student.email);
-                            }}
-                          >
-                            Edit Email
-                          </button>
-                          <button className="button-secondary" onClick={() => deleteStudent(student._id)}>
-                            X
-                          </button>
-                        </div>
-                      )}
-                    </td>
+            <div className="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Student ID</th>
+                    <th>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filtered.map((student) => (
+                    <tr key={student._id}>
+                      <td data-label="Name">{student.name}</td>
+                      <td data-label="Email">{student.email}</td>
+                      <td data-label="Student ID">{student.externalId || "-"}</td>
+                      <td data-label="Actions">
+                        {editingId === student._id ? (
+                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                            <input
+                              className="input"
+                              value={emailDraft}
+                              onChange={(e) => setEmailDraft(e.target.value)}
+                              style={{ minWidth: 220 }}
+                            />
+                            <button className="button" onClick={() => saveEmail(student._id)}>Save</button>
+                            <button
+                              className="button-secondary"
+                              onClick={() => {
+                                setEditingId(null);
+                                setEmailDraft("");
+                              }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="table-actions inline">
+                            <button className="button-secondary" onClick={() => sendInvite(student.email)} disabled={sendingEmail === student.email}>
+                              {sendingEmail === student.email ? "Sending..." : "Send Invite"}
+                            </button>
+                            <button
+                              className="button-secondary"
+                              onClick={() => {
+                                setEditingId(student._id);
+                                setEmailDraft(student.email);
+                              }}
+                            >
+                              Edit Email
+                            </button>
+                            <button className="button-secondary" onClick={() => deleteStudent(student._id)}>
+                              X
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

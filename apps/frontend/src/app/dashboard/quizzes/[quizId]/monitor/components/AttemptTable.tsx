@@ -52,16 +52,19 @@ export default function AttemptTable({ attempts, quizId, onEnded }: Props) {
         <tbody>
           {attempts.map((attempt) => (
             <tr key={attempt._id}>
-              <td>
+              <td data-label="Student">
                 <a href={`/dashboard/quizzes/${quizId}/monitor/${attempt._id}`}>{attempt.studentName}</a>
               </td>
-              <td>{attempt.studentEmail}</td>
-              <td>{attempt.status}</td>
-              <td>{attempt.score ? `${attempt.score.correctCount}/${attempt.score.totalQuestions}` : "-"}</td>
-              <td className={attempt.flags && attempt.flags.suspiciousEventsCount >= suspiciousThreshold ? "suspicious" : ""}>
+              <td data-label="Email">{attempt.studentEmail}</td>
+              <td data-label="Status">{attempt.status}</td>
+              <td data-label="Score">{attempt.score ? `${attempt.score.correctCount}/${attempt.score.totalQuestions}` : "-"}</td>
+              <td
+                data-label="Suspicious"
+                className={attempt.flags && attempt.flags.suspiciousEventsCount >= suspiciousThreshold ? "suspicious" : ""}
+              >
                 {attempt.flags?.suspiciousEventsCount ?? 0}
               </td>
-              <td>
+              <td data-label="Actions">
                 <div className="table-actions inline">
                   <button
                     className="button-secondary"

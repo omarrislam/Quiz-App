@@ -76,13 +76,13 @@ export default function Controls({ quizId, remainingSeconds, endAt, status }: Pr
 
   return (
     <div className="card">
-      <div style={{ display: "grid", gap: 12, gridTemplateColumns: "minmax(200px, 1fr) minmax(240px, 360px)", alignItems: "center" }}>
+      <div className="controls-grid">
         <div>
           <p className="section-title" style={{ marginBottom: 6 }}>Time left</p>
           <div style={{ fontSize: 22, fontWeight: 700 }}>{timeLeftLabel}</div>
           <p className="section-title" style={{ marginTop: 6 }}>Ends at {endAtLabel}</p>
         </div>
-        <div style={{ display: "grid", gap: 8 }}>
+        <div className="controls-actions">
           <button className="button-danger" onClick={endExam} disabled={ending || isDisabled}>
             {ending ? "Ending..." : "End Exam Now"}
           </button>
@@ -92,7 +92,7 @@ export default function Controls({ quizId, remainingSeconds, endAt, status }: Pr
               <span className="section-title">Ending exam</span>
             </span>
           ) : null}
-          <div style={{ display: "grid", gap: 8, gridTemplateColumns: "1fr auto" }}>
+          <div className="controls-extend">
             <input
               className="input"
               type="number"

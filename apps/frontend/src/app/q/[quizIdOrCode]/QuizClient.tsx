@@ -60,6 +60,7 @@ export default function QuizClient({
 
   const autoSubmitThresholdSeconds = 15;
   const webcamRequired = enableWebcamSnapshots || enableFaceCentering;
+  const snapshotsEnabled = enableWebcamSnapshots || enableFaceCentering;
 
   const isDesktop = useMemo(() => {
     if (typeof window === "undefined") return false;
@@ -88,6 +89,11 @@ export default function QuizClient({
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
+    }
+    const globalStream = typeof window !== "undefined" ? (window as any).__qp_webcam_stream : null;
+    if (globalStream) {
+      globalStream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
+      (window as any).__qp_webcam_stream = null;
     }
     const video = videoRef.current;
     if (video) {
@@ -123,11 +129,42 @@ export default function QuizClient({
     setWebcamStarting(true);
     setWebcamReady(false);
     try {
+      const existing = typeof window !== "undefined"
+        ? (window as any).__qp_webcam_stream as MediaStream | null
+        : null;
+      const hasLiveTrack = existing?.getVideoTracks().some((track) => track.readyState === "live");
+      if (existing && hasLiveTrack) {
+        streamRef.current = existing;
+        setWebcamActive(true);
+        const video = videoRef.current;
+        if (video) {
+          video.srcObject = existing;
+          video.onloadedmetadata = () => setWebcamReady(true);
+          video.onloadeddata = () => setWebcamReady(true);
+          await video.play().catch(() => {});
+        }
+        setWebcamStarting(false);
+        return;
+      }
+      if (existing) {
+        existing.getTracks().forEach((track) => track.stop());
+        if (typeof window !== "undefined") {
+          (window as any).__qp_webcam_stream = null;
+        }
+      }
+      if (webcamPermission === "denied") {
+        setWebcamError("Camera blocked. Allow permissions in your browser to continue.");
+        setWebcamStarting(false);
+        return;
+      }
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: { ideal: 320 }, height: { ideal: 240 } },
         audio: false
       });
       streamRef.current = stream;
+      if (typeof window !== "undefined") {
+        (window as any).__qp_webcam_stream = stream;
+      }
       setWebcamActive(true);
       const video = videoRef.current;
       if (video) {
@@ -166,7 +203,7 @@ export default function QuizClient({
   }
 
   async function captureSnapshot(phase: "start" | "middle" | "end") {
-    if (!enableWebcamSnapshots || !webcamActive) return;
+    if (!snapshotsEnabled || !webcamActive) return;
     if (capturedRef.current[phase]) return;
     const video = videoRef.current;
     if (!video) return;
@@ -201,9 +238,12 @@ export default function QuizClient({
         })
       });
       if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        console.warn("snapshot_failed", { phase, status: res.status, body: text });
         capturedRef.current[phase] = false;
       }
     } catch {
+      console.warn("snapshot_failed", { phase, status: "network_error" });
       capturedRef.current[phase] = false;
     }
   }
@@ -247,7 +287,10 @@ export default function QuizClient({
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (!webcamRequired) return;
+    if (!webcamRequired) {
+      stopWebcam();
+      return;
+    }
     let active = true;
     const run = async () => {
       await startWebcam();
@@ -374,22 +417,22 @@ export default function QuizClient({
   }, []);
 
   useEffect(() => {
-    if (!enableWebcamSnapshots || !webcamActive || !webcamReady || !ready) return;
+    if (!snapshotsEnabled || !webcamActive || !webcamReady || !ready) return;
     const startId = window.setTimeout(() => {
       captureSnapshot("start");
     }, 1500);
     return () => {
       window.clearTimeout(startId);
     };
-  }, [enableWebcamSnapshots, webcamActive, webcamReady, ready]);
+  }, [snapshotsEnabled, webcamActive, webcamReady, ready]);
 
   useEffect(() => {
-    if (!enableWebcamSnapshots || !webcamActive || !webcamReady) return;
+    if (!snapshotsEnabled || !webcamActive || !webcamReady) return;
     const midpoint = Math.max(0, Math.floor(questions.length / 2));
     if (index >= midpoint && !capturedRef.current.middle) {
       captureSnapshot("middle");
     }
-  }, [enableWebcamSnapshots, webcamActive, webcamReady, index, questions.length]);
+  }, [snapshotsEnabled, webcamActive, webcamReady, index, questions.length]);
 
   useEffect(() => {
     const onVisibility = () => {
@@ -567,6 +610,7 @@ export default function QuizClient({
       });
       const result = await res.json().catch(() => null);
       if (!res.ok) {
+        console.warn("finish_failed", { status: res.status, body: result });
         setForceEnded(true);
         return;
       }
@@ -648,6 +692,9 @@ export default function QuizClient({
                       ? "Camera blocked. Allow permissions in your browser to continue."
                       : "Camera access is required. Please allow webcam permissions in your browser.")}
               </p>
+              <button className="button-secondary" type="button" onClick={startWebcam} disabled={webcamStarting}>
+                {webcamStarting ? "Connecting..." : "Retry camera"}
+              </button>
             </>
           )}
         </div>

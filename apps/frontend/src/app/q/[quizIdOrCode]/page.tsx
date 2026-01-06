@@ -79,8 +79,12 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
       return false;
     }
     try {
+      const existing = (window as any).__qp_webcam_stream as MediaStream | undefined;
+      if (existing) {
+        existing.getTracks().forEach((track) => track.stop());
+      }
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-      stream.getTracks().forEach((track) => track.stop());
+      (window as any).__qp_webcam_stream = stream;
       setWebcamGranted(true);
       sessionStorage.setItem("qp_webcam_granted", "true");
       return true;
@@ -88,6 +92,9 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
       setWebcamError("Camera access blocked. Please allow permission.");
       setWebcamGranted(false);
       sessionStorage.setItem("qp_webcam_granted", "false");
+      if ((window as any).__qp_webcam_stream) {
+        (window as any).__qp_webcam_stream = null;
+      }
       return false;
     }
   }
@@ -124,6 +131,13 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
     });
     const data = await res.json().catch(() => null);
     if (!res.ok || !data?.settings || !data?.questions) {
+      console.warn("verify_failed", { status: res.status, body: data });
+      const existing = (window as any).__qp_webcam_stream as MediaStream | undefined;
+      if (existing) {
+        existing.getTracks().forEach((track) => track.stop());
+        (window as any).__qp_webcam_stream = null;
+      }
+      setWebcamGranted(false);
       setError(data?.error || "OTP verification failed.");
       return;
     }

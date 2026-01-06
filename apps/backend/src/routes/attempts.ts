@@ -54,17 +54,28 @@ attemptsRouter.post("/:attemptId/snapshots", async (req, res) => {
     if (!attempt) {
       return ok(res, { error: "Attempt not found" }, 404);
     }
-    const quiz = await Quiz.findById(attempt.quizId).select("settings.enableWebcamSnapshots").lean();
-    if (!quiz?.settings?.enableWebcamSnapshots) {
+    const quiz = await Quiz.findById(attempt.quizId)
+      .select("settings.enableWebcamSnapshots settings.enableFaceCentering")
+      .lean();
+    const snapshotsEnabled = Boolean(quiz?.settings?.enableWebcamSnapshots || quiz?.settings?.enableFaceCentering);
+    if (!snapshotsEnabled) {
+      console.warn("snapshot_rejected", { attemptId: attempt._id.toString(), reason: "disabled" });
       return ok(res, { error: "Webcam snapshots disabled" }, 403);
     }
     const phase = req.body?.phase;
     if (!phase || !["start", "middle", "end"].includes(phase)) {
+      console.warn("snapshot_rejected", { attemptId: attempt._id.toString(), reason: "invalid_phase", phase });
       return ok(res, { error: "Invalid snapshot phase" }, 400);
     }
     const data = typeof req.body?.data === "string" ? req.body.data : "";
     const mime = typeof req.body?.mime === "string" ? req.body.mime : "";
     if (!data || !mime.startsWith("image/")) {
+      console.warn("snapshot_rejected", {
+        attemptId: attempt._id.toString(),
+        reason: "invalid_data",
+        hasData: Boolean(data),
+        mime
+      });
       return ok(res, { error: "Invalid snapshot data" }, 400);
     }
     const existing = await AttemptSnapshot.findOne({ attemptId: attempt._id, phase }).lean();

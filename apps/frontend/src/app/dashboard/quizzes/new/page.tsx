@@ -49,9 +49,18 @@ export default function NewQuizPage() {
     <main>
       <div className="page-actions">
         <a className="button-secondary" href="/dashboard">Back to Dashboard</a>
-        <LogoutButton />
       </div>
-      <h1>Create Quiz</h1>
+      <div className="header-card">
+        <div className="header-card-row">
+          <div>
+            <h1 className="header-title">Create Quiz</h1>
+            <p className="header-subtitle">Set up a new quiz and basic settings.</p>
+          </div>
+          <div className="header-card-actions">
+            <LogoutButton />
+          </div>
+        </div>
+      </div>
       <div className="card">
         <input className="input" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
         <br />

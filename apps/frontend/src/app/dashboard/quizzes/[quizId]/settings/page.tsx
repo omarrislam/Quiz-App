@@ -95,11 +95,17 @@ export default function QuizSettingsPage({ params }: { params: { quizId: string 
     <main>
       <div className="page-actions">
         <a className="button-secondary" href="/dashboard">Back to Dashboard</a>
-        <LogoutButton />
       </div>
       <div className="header-card">
-        <h1 className="header-title">Quiz Settings</h1>
-        <p className="header-subtitle">Update timing and security options.</p>
+        <div className="header-card-row">
+          <div>
+            <h1 className="header-title">Quiz Settings</h1>
+            <p className="header-subtitle">Update timing and security options.</p>
+          </div>
+          <div className="header-card-actions">
+            <LogoutButton />
+          </div>
+        </div>
       </div>
       <div className="card">
         <p className="section-title">Title</p>

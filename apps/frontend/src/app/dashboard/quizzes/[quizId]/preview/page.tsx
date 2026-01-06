@@ -51,10 +51,20 @@ export default function PreviewPage({ params }: { params: { quizId: string } }) 
   if (!payload) {
     return (
       <main>
-      <div className="page-actions">
-        <a className="button-secondary" href="/dashboard">Back to Dashboard</a>
-        <LogoutButton />
-      </div>
+        <div className="page-actions">
+          <a className="button-secondary" href="/dashboard">Back to Dashboard</a>
+        </div>
+        <div className="header-card">
+          <div className="header-card-row">
+            <div>
+              <h1 className="header-title">Quiz Preview</h1>
+              <p className="header-subtitle">Loading preview details.</p>
+            </div>
+            <div className="header-card-actions">
+              <LogoutButton />
+            </div>
+          </div>
+        </div>
         <p>Loading preview...</p>
       </main>
     );
@@ -65,11 +75,17 @@ export default function PreviewPage({ params }: { params: { quizId: string } }) 
       <div className="page-actions">
         <a className="button-secondary" href="/dashboard">Back to Dashboard</a>
         <a className="button-secondary" href={`/dashboard/quizzes/${params.quizId}/questions`}>Back to Questions</a>
-        <LogoutButton />
       </div>
       <div className="header-card">
-        <h1 className="header-title">{payload.title} (Preview)</h1>
-        <p className="header-subtitle">This mode does not save responses.</p>
+        <div className="header-card-row">
+          <div>
+            <h1 className="header-title">{payload.title} (Preview)</h1>
+            <p className="header-subtitle">This mode does not save responses.</p>
+          </div>
+          <div className="header-card-actions">
+            <LogoutButton />
+          </div>
+        </div>
       </div>
       {current ? (
         <div className="card">

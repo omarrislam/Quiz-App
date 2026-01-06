@@ -70,11 +70,17 @@ export default function MonitorPage({ params }: { params: { quizId: string } }) 
     <main>
       <div className="page-actions">
         <a className="button-secondary" href="/dashboard">Back to Dashboard</a>
-        <LogoutButton />
       </div>
       <div className="header-card">
-        <h1 className="header-title">Live Monitor</h1>
-        <p className="header-subtitle">Track active attempts and suspicious activity.</p>
+        <div className="header-card-row">
+          <div>
+            <h1 className="header-title">Live Monitor</h1>
+            <p className="header-subtitle">Track active attempts and suspicious activity.</p>
+          </div>
+          <div className="header-card-actions">
+            <LogoutButton />
+          </div>
+        </div>
       </div>
       {metrics ? (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>

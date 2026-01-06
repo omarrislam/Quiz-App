@@ -110,9 +110,18 @@ export default function QuestionsPage({ params }: { params: { quizId: string } }
     <main>
       <div className="page-actions">
         <a className="button-secondary" href="/dashboard">Back to Dashboard</a>
-        <LogoutButton />
       </div>
-      <h1>Upload Questions</h1>
+      <div className="header-card">
+        <div className="header-card-row">
+          <div>
+            <h1 className="header-title">Upload Questions</h1>
+            <p className="header-subtitle">Add or edit questions for this quiz.</p>
+          </div>
+          <div className="header-card-actions">
+            <LogoutButton />
+          </div>
+        </div>
+      </div>
       <div className="card">
         <input type="file" accept=".csv" onChange={(e) => handleFile(e.target.files?.[0] || null)} />
         <br />

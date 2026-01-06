@@ -53,13 +53,16 @@ export default function DashboardPage() {
 
   return (
     <main>
-      <div className="page-actions">
-        <span />
-        <LogoutButton />
-      </div>
       <div className="header-card">
-        <h1 className="header-title">Instructor Dashboard</h1>
-        <p className="header-subtitle">Manage your quizzes and monitor results.</p>
+        <div className="header-card-row">
+          <div>
+            <h1 className="header-title">Instructor Dashboard</h1>
+            <p className="header-subtitle">Manage your quizzes and monitor results.</p>
+          </div>
+          <div className="header-card-actions">
+            <LogoutButton />
+          </div>
+        </div>
       </div>
       <div className="card" style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
         <input

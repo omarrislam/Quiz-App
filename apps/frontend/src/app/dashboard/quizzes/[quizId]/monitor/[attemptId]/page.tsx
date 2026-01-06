@@ -43,11 +43,17 @@ export default function AttemptDetailPage({ params }: { params: { quizId: string
       <div className="page-actions">
         <a className="button-secondary" href="/dashboard">Back to Dashboard</a>
         <a className="button-secondary" href={`/dashboard/quizzes/${params.quizId}/monitor`}>Back to Monitor</a>
-        <LogoutButton />
       </div>
       <div className="header-card">
-        <h1 className="header-title">Attempt Detail</h1>
-        <p className="header-subtitle">Responses by student.</p>
+        <div className="header-card-row">
+          <div>
+            <h1 className="header-title">Attempt Detail</h1>
+            <p className="header-subtitle">Responses by student.</p>
+          </div>
+          <div className="header-card-actions">
+            <LogoutButton />
+          </div>
+        </div>
       </div>
       <div className="card">
         <p>Name: {detail.studentName}</p>

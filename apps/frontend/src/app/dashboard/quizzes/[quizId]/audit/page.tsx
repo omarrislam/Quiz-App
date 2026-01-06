@@ -37,11 +37,17 @@ export default function AuditPage({ params }: { params: { quizId: string } }) {
       <div className="page-actions">
         <a className="button-secondary" href="/dashboard">Back to Dashboard</a>
         <a className="button-secondary" href={`/dashboard/quizzes/${params.quizId}/monitor`}>Back to Monitor</a>
-        <LogoutButton />
       </div>
       <div className="header-card">
-        <h1 className="header-title">Audit Log</h1>
-        <p className="header-subtitle">OTP sends, forced ends, and fullscreen exits.</p>
+        <div className="header-card-row">
+          <div>
+            <h1 className="header-title">Audit Log</h1>
+            <p className="header-subtitle">OTP sends, forced ends, and fullscreen exits.</p>
+          </div>
+          <div className="header-card-actions">
+            <LogoutButton />
+          </div>
+        </div>
       </div>
       <div className="card">
         <input

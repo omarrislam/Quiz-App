@@ -142,9 +142,18 @@ export default function StudentsPage({ params }: { params: { quizId: string } })
     <main>
       <div className="page-actions">
         <a className="button-secondary" href="/dashboard">Back to Dashboard</a>
-        <LogoutButton />
       </div>
-      <h1>Upload Students</h1>
+      <div className="header-card">
+        <div className="header-card-row">
+          <div>
+            <h1 className="header-title">Upload Students</h1>
+            <p className="header-subtitle">Manage your student roster and invitations.</p>
+          </div>
+          <div className="header-card-actions">
+            <LogoutButton />
+          </div>
+        </div>
+      </div>
       <div className="card">
         <input type="file" accept=".csv" onChange={(e) => handleFile(e.target.files?.[0] || null)} />
         <br />

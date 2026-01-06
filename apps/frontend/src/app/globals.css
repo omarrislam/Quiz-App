@@ -442,3 +442,74 @@ thead th {
     transform: rotate(360deg);
   }
 }
+
+@media (max-width: 768px) {
+  main {
+    margin: 18px auto;
+    padding: 0 14px 32px;
+  }
+
+  .header-card {
+    padding: 14px 16px;
+  }
+
+  .header-title {
+    font-size: 18px;
+  }
+
+  .card {
+    padding: 14px;
+  }
+
+  .button-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .button,
+  .button-secondary,
+  .button-danger {
+    width: 100%;
+  }
+
+  .option {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .option-badge {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .meta-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .table-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .page-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .link-row {
+    white-space: normal;
+    flex-wrap: wrap;
+  }
+
+  th, td {
+    padding: 10px 8px;
+  }
+
+  .scroll-to-top {
+    right: 12px;
+    bottom: 16px;
+  }
+}

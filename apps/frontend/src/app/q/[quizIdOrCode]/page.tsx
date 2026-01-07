@@ -40,6 +40,7 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
   const [secondCamError, setSecondCamError] = useState("");
   const [secondCamLoading, setSecondCamLoading] = useState(false);
   const [pendingQuiz, setPendingQuiz] = useState<QuizPayload | null>(null);
+  const [inviteToken, setInviteToken] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
@@ -53,14 +54,20 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
 
   useEffect(() => {
     const paramsObj = new URLSearchParams(window.location.search);
+    const invite = paramsObj.get("invite");
+    if (invite) {
+      setInviteToken(invite);
+      return;
+    }
     const prefillName = paramsObj.get("name");
     const prefillEmail = paramsObj.get("email");
-    if (prefillName) {
-      setName(prefillName);
-      setIdentityLocked(true);
-    }
-    if (prefillEmail) {
-      setEmail(prefillEmail);
+    if (prefillName || prefillEmail) {
+      if (prefillName) {
+        setName(prefillName);
+      }
+      if (prefillEmail) {
+        setEmail(prefillEmail);
+      }
       setIdentityLocked(true);
     }
   }, []);
@@ -70,6 +77,31 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
       setShowList(false);
     }
   }, [identityLocked]);
+
+  useEffect(() => {
+    if (!inviteToken) return () => {};
+    let active = true;
+    setError("");
+    apiFetch(`/api/quizzes/${params.quizIdOrCode}/invitations/${inviteToken}/public`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!active) return;
+        if (!data?.email || !data?.name) {
+          setError(data?.error || "Invitation link is invalid.");
+          return;
+        }
+        setName(data.name);
+        setEmail(data.email);
+        setIdentityLocked(true);
+      })
+      .catch(() => {
+        if (!active) return;
+        setError("Unable to load invitation details.");
+      });
+    return () => {
+      active = false;
+    };
+  }, [inviteToken, params.quizIdOrCode]);
 
   useEffect(() => {
     apiFetch(`/api/quizzes/${params.quizIdOrCode}/public`)

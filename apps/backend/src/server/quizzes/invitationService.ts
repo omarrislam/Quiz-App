@@ -49,20 +49,26 @@ export async function sendInvitations(quizId: string) {
       { upsert: true, new: true }
     );
 
-    const link = `${APP_BASE_URL}/q/${quizId}?email=${encodeURIComponent(student.email)}&name=${encodeURIComponent(student.name)}`;
+    const link = `${APP_BASE_URL}/q/${quizId}?invite=${invite._id.toString()}`;
     if (DEV_EMAIL_MODE) {
       console.info(`[dev-email] ${student.email} ${link} OTP=${otp}`);
     } else {
       await mailer.sendMail({
         from: SMTP_FROM,
         to: student.email,
-        subject: "Quiz access code",
+        subject: "Quiz Invitation: Your Access Code",
         text: [
           `Hello ${student.name},`,
           "",
+          "You have been invited to take a quiz.",
           `Quiz link: ${link}`,
-          `OTP: ${otp}`,
-          "Expires in 15 minutes.",
+          `One-time access code (OTP): ${otp}`,
+          "",
+          "Instructions:",
+          "1) Open the quiz link.",
+          "2) Enter your name and email if prompted.",
+          "3) Enter the OTP above to start.",
+          "4) Keep this code private. It expires in 15 minutes.",
           "",
           "If you did not request this, please ignore this email."
         ].join("\n")
@@ -102,7 +108,7 @@ export async function resendInvitation(quizId: string, email: string) {
   const otpCodeHash = hashOtp(otp);
   const otpExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
-  await Invitation.findOneAndUpdate(
+  const invite = await Invitation.findOneAndUpdate(
     { quizId, studentId: student._id },
     {
       $set: {
@@ -117,20 +123,30 @@ export async function resendInvitation(quizId: string, email: string) {
     { upsert: true, new: true }
   );
 
-  const link = `${APP_BASE_URL}/q/${quizId}?email=${encodeURIComponent(student.email)}&name=${encodeURIComponent(student.name)}`;
+  const inviteId = invite?._id?.toString();
+  if (!inviteId) {
+    throw new ApiError("Invitation not found", 404);
+  }
+  const link = `${APP_BASE_URL}/q/${quizId}?invite=${inviteId}`;
   if (DEV_EMAIL_MODE) {
     console.info(`[dev-email] ${student.email} ${link} OTP=${otp}`);
   } else {
     await mailer.sendMail({
       from: SMTP_FROM,
       to: student.email,
-      subject: "Quiz access code",
+      subject: "Quiz Invitation: Your Access Code",
       text: [
         `Hello ${student.name},`,
         "",
+        "You have been invited to take a quiz.",
         `Quiz link: ${link}`,
-        `OTP: ${otp}`,
-        "Expires in 15 minutes.",
+        `One-time access code (OTP): ${otp}`,
+        "",
+        "Instructions:",
+        "1) Open the quiz link.",
+        "2) Enter your name and email if prompted.",
+        "3) Enter the OTP above to start.",
+        "4) Keep this code private. It expires in 15 minutes.",
         "",
         "If you did not request this, please ignore this email."
       ].join("\n")
@@ -165,7 +181,7 @@ export async function sendInvitationToStudent(quizId: string, email: string) {
   const otpCodeHash = hashOtp(otp);
   const otpExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
-  await Invitation.findOneAndUpdate(
+  const invite = await Invitation.findOneAndUpdate(
     { quizId, studentId: student._id },
     {
       $set: {
@@ -180,20 +196,30 @@ export async function sendInvitationToStudent(quizId: string, email: string) {
     { upsert: true, new: true }
   );
 
-  const link = `${APP_BASE_URL}/q/${quizId}?email=${encodeURIComponent(student.email)}&name=${encodeURIComponent(student.name)}`;
+  const inviteId = invite?._id?.toString();
+  if (!inviteId) {
+    throw new ApiError("Invitation not found", 404);
+  }
+  const link = `${APP_BASE_URL}/q/${quizId}?invite=${inviteId}`;
   if (DEV_EMAIL_MODE) {
     console.info(`[dev-email] ${student.email} ${link} OTP=${otp}`);
   } else {
     await mailer.sendMail({
       from: SMTP_FROM,
       to: student.email,
-      subject: "Quiz access code",
+      subject: "Quiz Invitation: Your Access Code",
       text: [
         `Hello ${student.name},`,
         "",
+        "You have been invited to take a quiz.",
         `Quiz link: ${link}`,
-        `OTP: ${otp}`,
-        "Expires in 15 minutes.",
+        `One-time access code (OTP): ${otp}`,
+        "",
+        "Instructions:",
+        "1) Open the quiz link.",
+        "2) Enter your name and email if prompted.",
+        "3) Enter the OTP above to start.",
+        "4) Keep this code private. It expires in 15 minutes.",
         "",
         "If you did not request this, please ignore this email."
       ].join("\n")

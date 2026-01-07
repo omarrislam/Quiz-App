@@ -64,6 +64,23 @@ quizzesRouter.get("/:quizId/students/public", async (req, res) => {
   }
 });
 
+quizzesRouter.get("/:quizId/invitations/:inviteId/public", async (req, res) => {
+  try {
+    await connectDb();
+    const invitation = await Invitation.findOne({ _id: req.params.inviteId, quizId: req.params.quizId }).lean();
+    if (!invitation) {
+      return ok(res, { error: "Invitation not found" }, 404);
+    }
+    const student = await Student.findById(invitation.studentId).lean();
+    if (!student) {
+      return ok(res, { error: "Student not found" }, 404);
+    }
+    return ok(res, { name: student.name, email: student.email });
+  } catch (error) {
+    return handleError(res, error);
+  }
+});
+
 quizzesRouter.post("/:quizId/invitations/resend-otp", async (req, res) => {
   try {
     await connectDb();

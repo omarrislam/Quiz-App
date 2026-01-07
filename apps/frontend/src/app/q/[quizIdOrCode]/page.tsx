@@ -191,24 +191,6 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
     return <ResultScreen name={email} result={result} showScore={quiz.settings.showScoreToStudent} title={quiz.title} />;
   }
 
-  if (quiz) {
-    return (
-      <QuizClient
-        attemptId={quiz.attemptId}
-        title={quiz.title}
-        questions={quiz.questions}
-        questionTimeSeconds={quiz.settings.questionTimeSeconds}
-        totalTimeSeconds={quiz.settings.totalTimeSeconds}
-        requireFullscreen={quiz.settings.requireFullscreen}
-        logSuspiciousActivity={quiz.settings.logSuspiciousActivity}
-        enableWebcamSnapshots={quiz.settings.enableWebcamSnapshots}
-        enableFaceCentering={quiz.settings.enableFaceCentering}
-        enableSecondCam={quiz.settings.enableSecondCam}
-        onFinish={setResult}
-      />
-    );
-  }
-
   useEffect(() => {
     let active = true;
     if (!pendingQuiz || !secondCamToken) return () => {};
@@ -249,6 +231,24 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
       window.clearInterval(timer);
     };
   }, [pendingQuiz]);
+
+  if (quiz) {
+    return (
+      <QuizClient
+        attemptId={quiz.attemptId}
+        title={quiz.title}
+        questions={quiz.questions}
+        questionTimeSeconds={quiz.settings.questionTimeSeconds}
+        totalTimeSeconds={quiz.settings.totalTimeSeconds}
+        requireFullscreen={quiz.settings.requireFullscreen}
+        logSuspiciousActivity={quiz.settings.logSuspiciousActivity}
+        enableWebcamSnapshots={quiz.settings.enableWebcamSnapshots}
+        enableFaceCentering={quiz.settings.enableFaceCentering}
+        enableSecondCam={quiz.settings.enableSecondCam}
+        onFinish={setResult}
+      />
+    );
+  }
 
   return (
     <main>

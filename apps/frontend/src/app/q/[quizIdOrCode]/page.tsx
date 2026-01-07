@@ -187,10 +187,6 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
     setShowList(false);
   }
 
-  if (result && quiz) {
-    return <ResultScreen name={email} result={result} showScore={quiz.settings.showScoreToStudent} title={quiz.title} />;
-  }
-
   useEffect(() => {
     let active = true;
     if (!pendingQuiz || !secondCamToken) return () => {};
@@ -231,6 +227,10 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
       window.clearInterval(timer);
     };
   }, [pendingQuiz]);
+
+  if (result && quiz) {
+    return <ResultScreen name={email} result={result} showScore={quiz.settings.showScoreToStudent} title={quiz.title} />;
+  }
 
   if (quiz) {
     return (

@@ -49,6 +49,7 @@ export default function QuizClient({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const capturedRef = useRef({ start: false, middle: false, end: false });
+  const abandonRef = useRef(false);
   const [webcamActive, setWebcamActive] = useState(false);
   const [webcamReady, setWebcamReady] = useState(false);
   const [webcamError, setWebcamError] = useState("");
@@ -85,6 +86,25 @@ export default function QuizClient({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ type, message })
     });
+  }
+
+  function abandonAttempt(reason: string) {
+    if (abandonRef.current) return;
+    abandonRef.current = true;
+    setForceEnded(true);
+    setPaused(true);
+    stopWebcam();
+    const payload = JSON.stringify({ reason });
+    if (typeof navigator !== "undefined" && "sendBeacon" in navigator) {
+      const blob = new Blob([payload], { type: "application/json" });
+      navigator.sendBeacon(`/api/attempts/${attemptId}/abandon`, blob);
+      return;
+    }
+    apiFetch(`/api/attempts/${attemptId}/abandon`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: payload
+    }).catch(() => {});
   }
 
   function stopWebcam() {
@@ -440,21 +460,25 @@ export default function QuizClient({
     const onVisibility = () => {
       if (document.hidden) {
         logEvent("visibility_hidden", "Tab hidden");
+        abandonAttempt("visibility_hidden");
       } else {
         logEvent("visibility_visible", "Tab visible");
       }
     };
     const onBlur = () => logEvent("window_blur", "Window blurred");
     const onFocus = () => logEvent("window_focus", "Window focused");
+    const onPageHide = () => abandonAttempt("page_hide");
 
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("blur", onBlur);
     window.addEventListener("focus", onFocus);
+    window.addEventListener("pagehide", onPageHide);
 
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("blur", onBlur);
       window.removeEventListener("focus", onFocus);
+      window.removeEventListener("pagehide", onPageHide);
     };
   }, []);
 

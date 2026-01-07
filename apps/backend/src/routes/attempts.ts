@@ -64,6 +64,33 @@ attemptsRouter.post("/:attemptId/finish", async (req, res) => {
   }
 });
 
+attemptsRouter.post("/:attemptId/abandon", async (req, res) => {
+  try {
+    await connectDb();
+    const attempt = await Attempt.findById(req.params.attemptId).lean();
+    if (!attempt) {
+      return ok(res, { error: "Attempt not found" }, 404);
+    }
+    if (attempt.status !== "in_progress") {
+      return ok(res, { status: attempt.status });
+    }
+    await Attempt.updateOne(
+      { _id: req.params.attemptId },
+      { $set: { status: "forcibly_ended", submittedAt: new Date() } }
+    );
+    await AuditLog.create({
+      quizId: attempt.quizId,
+      type: "attempt_abandoned",
+      message: `Attempt ended after leaving tab (${req.body?.reason || "unknown"})`,
+      meta: { attemptId: attempt._id.toString(), email: attempt.studentEmail }
+    });
+    await SecondCamSession.deleteMany({ attemptId: req.params.attemptId });
+    return ok(res, { status: "ended" });
+  } catch (error) {
+    return handleError(res, error);
+  }
+});
+
 attemptsRouter.post("/:attemptId/snapshots", async (req, res) => {
   try {
     await connectDb();

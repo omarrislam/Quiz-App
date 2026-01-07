@@ -9,11 +9,13 @@ export async function importStudents(quizId: string, csvContent: string) {
   }
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const normalizedEmails = new Set<string>();
+  const normalizedExternalIds = new Set<string>();
   const duplicates: string[] = [];
   const docs = records.map((row: Record<string, string>) => {
     const name = row.Name || row.name;
     const email = row.Email || row.email;
-    const externalId = row.StudentId || row.studentId || null;
+    const externalIdRaw = row.StudentId || row.studentId || null;
+    const externalId = externalIdRaw ? String(externalIdRaw).trim() : null;
     if (!name || !email) {
       throw new ApiError("Each student needs Name and Email", 400);
     }
@@ -25,10 +27,26 @@ export async function importStudents(quizId: string, csvContent: string) {
       duplicates.push(email);
     }
     normalizedEmails.add(normalized);
+    if (externalId) {
+      if (normalizedExternalIds.has(externalId)) {
+        duplicates.push(externalId);
+      }
+      normalizedExternalIds.add(externalId);
+    }
     return { quizId, name, email, externalId };
   });
   if (duplicates.length) {
-    throw new ApiError(`Duplicate emails in upload: ${duplicates.join(", ")}`, 400);
+    throw new ApiError(`Duplicate entries in upload: ${duplicates.join(", ")}`, 400);
+  }
+  const existingExternalIds = new Set(
+    (await Student.find({ quizId }).select("externalId").lean())
+      .map((student) => student.externalId)
+      .filter((externalId): externalId is string => Boolean(externalId))
+  );
+  for (const externalId of normalizedExternalIds) {
+    if (existingExternalIds.has(externalId)) {
+      throw new ApiError(`Student ID already exists: ${externalId}`, 400);
+    }
   }
   const existing = await Student.find({ quizId, email: { $in: Array.from(normalizedEmails) } })
     .select("email")
@@ -36,15 +54,24 @@ export async function importStudents(quizId: string, csvContent: string) {
   if (existing.length) {
     throw new ApiError(`Emails already exist: ${existing.map((s) => s.email).join(", ")}`, 400);
   }
-  const created = await Student.insertMany(docs);
-  const updates = created.map((student, index) => {
-    const generatedId = `SID-${String(index + 1).padStart(4, "0")}`;
-    if (student.externalId) {
-      return null;
+  let maxNumericId = 0;
+  for (const externalId of existingExternalIds) {
+    const match = /^SID-(\d+)$/.exec(externalId);
+    if (match) {
+      maxNumericId = Math.max(maxNumericId, Number(match[1]));
     }
-    return Student.updateOne({ _id: student._id }, { $set: { externalId: generatedId } });
-  });
-  await Promise.all(updates.filter(Boolean));
+  }
+  for (const doc of docs) {
+    if (doc.externalId) continue;
+    let generatedId = "";
+    do {
+      maxNumericId += 1;
+      generatedId = `SID-${String(maxNumericId).padStart(4, "0")}`;
+    } while (existingExternalIds.has(generatedId) || normalizedExternalIds.has(generatedId));
+    doc.externalId = generatedId;
+    normalizedExternalIds.add(generatedId);
+  }
+  await Student.insertMany(docs);
   return Student.find({ quizId }).lean();
 }
 

@@ -9,6 +9,9 @@ import { AuditLog } from "../models/AuditLog";
 const APP_BASE_URL = process.env.APP_BASE_URL || "";
 const SMTP_FROM = process.env.SMTP_FROM || "";
 const DEV_EMAIL_MODE = process.env.DEV_EMAIL_MODE === "true";
+const DISABLE_CLICKTRACK = JSON.stringify({
+  filters: { clicktrack: { settings: { enable: 0, enable_text: 0 } } }
+});
 
 export async function sendInvitations(quizId: string) {
   const students = await Student.find({ quizId }).lean();
@@ -57,6 +60,7 @@ export async function sendInvitations(quizId: string) {
         from: SMTP_FROM,
         to: student.email,
         subject: "Quiz Invitation: Your Access Code",
+        headers: { "X-SMTPAPI": DISABLE_CLICKTRACK },
         text: [
           `Hello ${student.name},`,
           "",
@@ -135,6 +139,7 @@ export async function resendInvitation(quizId: string, email: string) {
       from: SMTP_FROM,
       to: student.email,
       subject: "Quiz Invitation: Your Access Code",
+      headers: { "X-SMTPAPI": DISABLE_CLICKTRACK },
       text: [
         `Hello ${student.name},`,
         "",
@@ -208,6 +213,7 @@ export async function sendInvitationToStudent(quizId: string, email: string) {
       from: SMTP_FROM,
       to: student.email,
       subject: "Quiz Invitation: Your Access Code",
+      headers: { "X-SMTPAPI": DISABLE_CLICKTRACK },
       text: [
         `Hello ${student.name},`,
         "",

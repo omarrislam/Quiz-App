@@ -82,7 +82,14 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
     if (!inviteToken) return () => {};
     let active = true;
     setError("");
-    apiFetch(`/api/quizzes/${params.quizIdOrCode}/invitations/${inviteToken}/public`)
+    const normalizedInvite = inviteToken.match(/[a-fA-F0-9]{24}/)?.[0] || "";
+    if (!normalizedInvite) {
+      setError("Invitation link is invalid.");
+      return () => {
+        active = false;
+      };
+    }
+    apiFetch(`/api/quizzes/${params.quizIdOrCode}/invitations/${normalizedInvite}/public`)
       .then((res) => res.json())
       .then((data) => {
         if (!active) return;

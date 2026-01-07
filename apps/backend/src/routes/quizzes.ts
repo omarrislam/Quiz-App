@@ -1,4 +1,5 @@
 import { Router } from "express";
+import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import { connectDb } from "../server/db";
 import { handleError, ok } from "../http/response";
@@ -67,7 +68,12 @@ quizzesRouter.get("/:quizId/students/public", async (req, res) => {
 quizzesRouter.get("/:quizId/invitations/:inviteId/public", async (req, res) => {
   try {
     await connectDb();
-    const invitation = await Invitation.findOne({ _id: req.params.inviteId, quizId: req.params.quizId }).lean();
+    const rawInviteId = String(req.params.inviteId || "");
+    const match = rawInviteId.match(/[a-fA-F0-9]{24}/);
+    if (!match || !mongoose.Types.ObjectId.isValid(match[0])) {
+      return ok(res, { error: "Invalid invitation link" }, 400);
+    }
+    const invitation = await Invitation.findOne({ _id: match[0], quizId: req.params.quizId }).lean();
     if (!invitation) {
       return ok(res, { error: "Invitation not found" }, 404);
     }

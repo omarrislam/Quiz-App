@@ -38,10 +38,12 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
   const [secondCamQr, setSecondCamQr] = useState<string | null>(null);
   const [secondCamConnected, setSecondCamConnected] = useState(false);
   const [secondCamError, setSecondCamError] = useState("");
+  const [secondCamLoading, setSecondCamLoading] = useState(false);
   const [pendingQuiz, setPendingQuiz] = useState<QuizPayload | null>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
+  const [identityLocked, setIdentityLocked] = useState(false);
   const [quiz, setQuiz] = useState<QuizPayload | null>(null);
   const [result, setResult] = useState<ResultPayload | null>(null);
   const [error, setError] = useState("");
@@ -55,11 +57,19 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
     const prefillEmail = paramsObj.get("email");
     if (prefillName) {
       setName(prefillName);
+      setIdentityLocked(true);
     }
     if (prefillEmail) {
       setEmail(prefillEmail);
+      setIdentityLocked(true);
     }
   }, []);
+
+  useEffect(() => {
+    if (identityLocked) {
+      setShowList(false);
+    }
+  }, [identityLocked]);
 
   useEffect(() => {
     apiFetch(`/api/quizzes/${params.quizIdOrCode}/public`)
@@ -159,6 +169,7 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
       setSecondCamConnected(false);
       setSecondCamQr(null);
       setSecondCamError("");
+      setSecondCamLoading(true);
       setPendingQuiz(data);
       return;
     }
@@ -185,21 +196,25 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
     setName(student.name);
     setEmail(student.email);
     setShowList(false);
+    setIdentityLocked(true);
   }
 
   useEffect(() => {
     let active = true;
     if (!pendingQuiz || !secondCamToken) return () => {};
+    setSecondCamLoading(true);
     const url = `${window.location.origin}/second-cam?attemptId=${pendingQuiz.attemptId}&token=${encodeURIComponent(secondCamToken)}`;
     import("qrcode")
       .then((QRCode) => QRCode.toDataURL(url, { margin: 1, width: 220 }))
       .then((dataUrl) => {
         if (!active) return;
         setSecondCamQr(dataUrl);
+        setSecondCamLoading(false);
       })
       .catch(() => {
         if (!active) return;
         setSecondCamError("Unable to generate QR code.");
+        setSecondCamLoading(false);
       });
     return () => {
       active = false;
@@ -263,7 +278,12 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
           placeholder="Type your name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          onFocus={() => setShowList(true)}
+          onFocus={() => {
+            if (!identityLocked) {
+              setShowList(true);
+            }
+          }}
+          disabled={identityLocked}
         />
         {showList && suggestions.length > 0 ? (
           <div className="dropdown">
@@ -277,7 +297,13 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
         <br />
         <br />
         <p className="section-title">Email address</p>
-        <input className="input" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <input
+          className="input"
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          disabled={identityLocked}
+        />
         <br />
         <br />
         <p className="section-title">OTP code</p>
@@ -343,6 +369,12 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
             <div className="card">
               <p className="section-title">Second camera required</p>
               <p>Scan the QR code to open the second camera on your mobile device.</p>
+              {secondCamLoading ? (
+                <div className="spinner-inline">
+                  <span className="spinner" />
+                  <span>Generating QR code...</span>
+                </div>
+              ) : null}
               {secondCamQr ? (
                 <img src={secondCamQr} alt="Second camera QR" style={{ width: 220, maxWidth: "100%" }} />
               ) : null}

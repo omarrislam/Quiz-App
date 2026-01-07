@@ -18,6 +18,7 @@ type AttemptDetail = {
   score?: { correctCount: number; totalQuestions: number };
   answers: Answer[];
   snapshots?: { phase: string; mime: string; data: string; createdAt?: string }[];
+  secondCamSnapshots?: { mime: string; data: string; createdAt?: string }[];
 };
 
 export default function AttemptDetailPage({ params }: { params: { quizId: string; attemptId: string } }) {
@@ -80,6 +81,27 @@ export default function AttemptDetailPage({ params }: { params: { quizId: string
           </div>
         ) : (
           <p>No snapshots recorded.</p>
+        )}
+      </div>
+      <div className="card">
+        <h2>Second Camera Snapshots</h2>
+        {detail.secondCamSnapshots && detail.secondCamSnapshots.length > 0 ? (
+          <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
+            {detail.secondCamSnapshots.map((snapshot, idx) => (
+              <div key={`second-cam-${idx}`}>
+                <p className="section-title" style={{ margin: "0 0 6px" }}>
+                  {snapshot.createdAt ? new Date(snapshot.createdAt).toLocaleTimeString() : "Snapshot"}
+                </p>
+                <img
+                  src={`data:${snapshot.mime};base64,${snapshot.data}`}
+                  alt="Second camera snapshot"
+                  style={{ width: "100%", borderRadius: 10, border: "1px solid #eef1f7" }}
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p>No second camera snapshots recorded.</p>
         )}
       </div>
       <div className="card">

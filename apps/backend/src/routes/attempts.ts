@@ -6,12 +6,28 @@ import { Attempt } from "../server/models/Attempt";
 import { Event } from "../server/models/Event";
 import { Question } from "../server/models/Question";
 import { AttemptSnapshot } from "../server/models/AttemptSnapshot";
+import { SecondCamSnapshot } from "../server/models/SecondCamSnapshot";
+import { SecondCamSession } from "../server/models/SecondCamSession";
 import { Quiz } from "../server/models/Quiz";
 import { requireAuth } from "../middleware/auth";
 import { assertQuizOwnership } from "../server/quizzes/quizService";
 import { AuditLog } from "../server/models/AuditLog";
+import jwt from "jsonwebtoken";
 
 export const attemptsRouter = Router();
+
+function verifySecondCamToken(token: string, attemptId: string) {
+  if (!token) return false;
+  const secret = process.env.JWT_SECRET || "";
+  if (!secret) return false;
+  try {
+    const payload = jwt.verify(token, secret) as { sub?: string; type?: string };
+    if (payload?.type !== "second_cam") return false;
+    return payload?.sub === attemptId;
+  } catch {
+    return false;
+  }
+}
 
 // Public routes for students
 attemptsRouter.get("/:attemptId/status", async (req, res) => {
@@ -41,6 +57,7 @@ attemptsRouter.post("/:attemptId/finish", async (req, res) => {
   try {
     await connectDb();
     const result = await finishAttempt(req.params.attemptId, req.body?.answers || []);
+    await SecondCamSession.deleteMany({ attemptId: req.params.attemptId });
     return ok(res, result);
   } catch (error) {
     return handleError(res, error);
@@ -98,6 +115,116 @@ attemptsRouter.post("/:attemptId/snapshots", async (req, res) => {
   }
 });
 
+attemptsRouter.post("/:attemptId/second-cam/connect", async (req, res) => {
+  try {
+    await connectDb();
+    const attempt = await Attempt.findById(req.params.attemptId).lean();
+    if (!attempt) {
+      return ok(res, { error: "Attempt not found" }, 404);
+    }
+    if (attempt.status !== "in_progress") {
+      return ok(res, { error: "Attempt not active" }, 403);
+    }
+    const quiz = await Quiz.findById(attempt.quizId).select("settings.enableSecondCam").lean();
+    if (!quiz?.settings?.enableSecondCam) {
+      return ok(res, { error: "Second camera disabled" }, 403);
+    }
+    const token = typeof req.body?.token === "string" ? req.body.token : "";
+    if (!verifySecondCamToken(token, attempt._id.toString())) {
+      return ok(res, { error: "Invalid token" }, 401);
+    }
+    const now = new Date();
+    await SecondCamSession.updateOne(
+      { attemptId: attempt._id },
+      {
+        $setOnInsert: {
+          attemptId: attempt._id,
+          quizId: attempt.quizId,
+          studentId: attempt.studentId || null,
+          connectedAt: now
+        },
+        $set: { lastSeenAt: now }
+      },
+      { upsert: true }
+    );
+    return ok(res, { status: "connected" });
+  } catch (error) {
+    return handleError(res, error);
+  }
+});
+
+attemptsRouter.get("/:attemptId/second-cam/status", async (req, res) => {
+  try {
+    await connectDb();
+    const attempt = await Attempt.findById(req.params.attemptId).lean();
+    if (!attempt) {
+      return ok(res, { error: "Attempt not found" }, 404);
+    }
+    if (attempt.status !== "in_progress") {
+      return ok(res, { error: "Attempt not active" }, 403);
+    }
+    const quiz = await Quiz.findById(attempt.quizId).select("settings.enableSecondCam").lean();
+    if (!quiz?.settings?.enableSecondCam) {
+      return ok(res, { connected: false });
+    }
+    const session = await SecondCamSession.findOne({ attemptId: attempt._id }).lean();
+    const lastSeen = session?.lastSeenAt ? new Date(session.lastSeenAt) : null;
+    const connected = Boolean(lastSeen && (Date.now() - lastSeen.getTime()) < 20000);
+    return ok(res, { connected });
+  } catch (error) {
+    return handleError(res, error);
+  }
+});
+
+attemptsRouter.post("/:attemptId/second-cam/snapshots", async (req, res) => {
+  try {
+    await connectDb();
+    const attempt = await Attempt.findById(req.params.attemptId).lean();
+    if (!attempt) {
+      return ok(res, { error: "Attempt not found" }, 404);
+    }
+    const quiz = await Quiz.findById(attempt.quizId).select("settings.enableSecondCam").lean();
+    if (!quiz?.settings?.enableSecondCam) {
+      return ok(res, { error: "Second camera disabled" }, 403);
+    }
+    const token = typeof req.body?.token === "string" ? req.body.token : "";
+    if (!verifySecondCamToken(token, attempt._id.toString())) {
+      return ok(res, { error: "Invalid token" }, 401);
+    }
+    const data = typeof req.body?.data === "string" ? req.body.data : "";
+    const mime = typeof req.body?.mime === "string" ? req.body.mime : "";
+    if (!data || !mime.startsWith("image/")) {
+      return ok(res, { error: "Invalid snapshot data" }, 400);
+    }
+    const now = new Date();
+    await SecondCamSession.updateOne(
+      { attemptId: attempt._id },
+      {
+        $setOnInsert: {
+          attemptId: attempt._id,
+          quizId: attempt.quizId,
+          studentId: attempt.studentId || null,
+          connectedAt: now
+        },
+        $set: { lastSeenAt: now }
+      },
+      { upsert: true }
+    );
+    await SecondCamSnapshot.create({
+      attemptId: attempt._id,
+      quizId: attempt.quizId,
+      studentId: attempt.studentId || null,
+      mime,
+      data,
+      width: Number(req.body?.width) || 320,
+      height: Number(req.body?.height) || 240
+    });
+    return ok(res, { status: "saved" }, 201);
+  } catch (error) {
+    return handleError(res, error);
+  }
+});
+
 // Instructor-protected routes
 attemptsRouter.use(requireAuth);
 
@@ -128,6 +255,9 @@ attemptsRouter.get("/:attemptId/detail", async (req, res) => {
     const snapshots = await AttemptSnapshot.find({ attemptId: attempt._id })
       .sort({ createdAt: 1 })
       .lean();
+    const secondCamSnapshots = await SecondCamSnapshot.find({ attemptId: attempt._id })
+      .sort({ createdAt: 1 })
+      .lean();
     return ok(res, {
       studentName: attempt.studentName,
       studentEmail: attempt.studentEmail,
@@ -136,6 +266,11 @@ attemptsRouter.get("/:attemptId/detail", async (req, res) => {
       answers,
       snapshots: snapshots.map((snapshot) => ({
         phase: snapshot.phase,
+        mime: snapshot.mime,
+        data: snapshot.data,
+        createdAt: snapshot.createdAt
+      })),
+      secondCamSnapshots: secondCamSnapshots.map((snapshot) => ({
         mime: snapshot.mime,
         data: snapshot.data,
         createdAt: snapshot.createdAt
@@ -183,7 +318,9 @@ attemptsRouter.delete("/:attemptId", async (req, res) => {
     await Promise.all([
       Attempt.deleteOne({ _id: req.params.attemptId }),
       Event.deleteMany({ attemptId: req.params.attemptId }),
-      AttemptSnapshot.deleteMany({ attemptId: req.params.attemptId })
+      AttemptSnapshot.deleteMany({ attemptId: req.params.attemptId }),
+      SecondCamSnapshot.deleteMany({ attemptId: req.params.attemptId }),
+      SecondCamSession.deleteMany({ attemptId: req.params.attemptId })
     ]);
     await AuditLog.create({
       quizId: attempt.quizId,

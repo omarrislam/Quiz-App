@@ -1,4 +1,5 @@
 import { Router } from "express";
+import jwt from "jsonwebtoken";
 import { connectDb } from "../server/db";
 import { handleError, ok } from "../http/response";
 import { requireAuth } from "../middleware/auth";
@@ -16,6 +17,8 @@ import { Attempt } from "../server/models/Attempt";
 import { Event } from "../server/models/Event";
 import { AuditLog } from "../server/models/AuditLog";
 import { AttemptSnapshot } from "../server/models/AttemptSnapshot";
+import { SecondCamSnapshot } from "../server/models/SecondCamSnapshot";
+import { SecondCamSession } from "../server/models/SecondCamSession";
 import { ApiError } from "../server/http/errors";
 
 function shuffleArray<T>(items: T[]) {
@@ -41,7 +44,8 @@ quizzesRouter.get("/:quizId/public", async (req, res) => {
       title: quiz.title,
       questionTimeSeconds: quiz.settings?.questionTimeSeconds || 35,
       enableWebcamSnapshots: Boolean(quiz.settings?.enableWebcamSnapshots),
-      enableFaceCentering: Boolean(quiz.settings?.enableFaceCentering)
+      enableFaceCentering: Boolean(quiz.settings?.enableFaceCentering),
+      enableSecondCam: Boolean(quiz.settings?.enableSecondCam)
     });
   } catch (error) {
     return handleError(res, error);
@@ -79,6 +83,15 @@ quizzesRouter.post("/:quizId/verify-otp", async (req, res) => {
       throw new ApiError("No questions uploaded for this quiz", 400);
     }
     const shuffledQuestions = quiz.settings.shuffleQuestions ? shuffleArray(questions) : questions;
+    const secondCamEnabled = Boolean(quiz.settings.enableSecondCam);
+    const secret = process.env.JWT_SECRET || "";
+    const secondCamToken = secondCamEnabled && secret
+      ? jwt.sign(
+        { sub: attempt._id.toString(), type: "second_cam" },
+        secret,
+        { expiresIn: "6h" }
+      )
+      : null;
     return ok(res, {
       attemptId: attempt._id.toString(),
       title: quiz.title,
@@ -89,8 +102,10 @@ quizzesRouter.post("/:quizId/verify-otp", async (req, res) => {
         logSuspiciousActivity: quiz.settings.logSuspiciousActivity,
         enableWebcamSnapshots: quiz.settings.enableWebcamSnapshots,
         enableFaceCentering: quiz.settings.enableFaceCentering,
+        enableSecondCam: quiz.settings.enableSecondCam,
         totalTimeSeconds: quiz.settings.totalTimeSeconds || null
       },
+      secondCamToken,
       questions: shuffledQuestions.map((q) => ({
         id: q._id.toString(),
         text: q.text,
@@ -164,7 +179,9 @@ quizzesRouter.delete("/:quizId", async (req, res) => {
       Invitation.deleteMany({ quizId: req.params.quizId }),
       Attempt.deleteMany({ quizId: req.params.quizId }),
       Event.deleteMany({ quizId: req.params.quizId }),
-      AttemptSnapshot.deleteMany({ quizId: req.params.quizId })
+      AttemptSnapshot.deleteMany({ quizId: req.params.quizId }),
+      SecondCamSnapshot.deleteMany({ quizId: req.params.quizId }),
+      SecondCamSession.deleteMany({ quizId: req.params.quizId })
     ]);
     return ok(res, { status: "deleted" });
   } catch (error) {

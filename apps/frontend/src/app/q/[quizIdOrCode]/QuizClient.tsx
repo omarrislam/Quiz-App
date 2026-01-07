@@ -17,6 +17,7 @@ type Props = {
   logSuspiciousActivity: boolean;
   enableWebcamSnapshots: boolean;
   enableFaceCentering: boolean;
+  enableSecondCam: boolean;
   onFinish: (result: ResultPayload) => void;
 };
 
@@ -32,6 +33,7 @@ export default function QuizClient({
   logSuspiciousActivity,
   enableWebcamSnapshots,
   enableFaceCentering,
+  enableSecondCam,
   onFinish
 }: Props) {
   const [index, setIndex] = useState(0);

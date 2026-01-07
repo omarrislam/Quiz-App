@@ -15,6 +15,7 @@ type QuizSettings = {
   logSuspiciousActivity: boolean;
   enableWebcamSnapshots: boolean;
   enableFaceCentering: boolean;
+  enableSecondCam: boolean;
 };
 
 export default function QuizSettingsPage({ params }: { params: { quizId: string } }) {
@@ -30,7 +31,8 @@ export default function QuizSettingsPage({ params }: { params: { quizId: string 
     requireFullscreen: true,
     logSuspiciousActivity: true,
     enableWebcamSnapshots: false,
-    enableFaceCentering: false
+    enableFaceCentering: false,
+    enableSecondCam: false
   });
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
@@ -60,7 +62,8 @@ export default function QuizSettingsPage({ params }: { params: { quizId: string 
             requireFullscreen: Boolean(data.settings?.requireFullscreen),
             logSuspiciousActivity: Boolean(data.settings?.logSuspiciousActivity),
             enableWebcamSnapshots: Boolean(data.settings?.enableWebcamSnapshots),
-            enableFaceCentering: Boolean(data.settings?.enableFaceCentering)
+            enableFaceCentering: Boolean(data.settings?.enableFaceCentering),
+            enableSecondCam: Boolean(data.settings?.enableSecondCam)
           });
         }
       })
@@ -204,6 +207,15 @@ export default function QuizSettingsPage({ params }: { params: { quizId: string 
             onChange={(e) => setSettings({ ...settings, enableFaceCentering: e.target.checked })}
           />
           &nbsp;Require face centered during exam
+        </label>
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={settings.enableSecondCam}
+            onChange={(e) => setSettings({ ...settings, enableSecondCam: e.target.checked })}
+          />
+          &nbsp;Require second camera (mobile QR)
         </label>
         <br />
         <br />

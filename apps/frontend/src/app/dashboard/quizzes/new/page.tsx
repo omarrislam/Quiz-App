@@ -17,6 +17,7 @@ export default function NewQuizPage() {
   const [logSuspiciousActivity, setLogSuspiciousActivity] = useState(true);
   const [enableWebcamSnapshots, setEnableWebcamSnapshots] = useState(false);
   const [enableFaceCentering, setEnableFaceCentering] = useState(false);
+  const [enableSecondCam, setEnableSecondCam] = useState(false);
   const [creating, setCreating] = useState(false);
 
   async function submit() {
@@ -33,7 +34,8 @@ export default function NewQuizPage() {
       requireFullscreen,
       logSuspiciousActivity,
       enableWebcamSnapshots,
-      enableFaceCentering
+      enableFaceCentering,
+      enableSecondCam
     };
 
     await apiFetch("/api/quizzes", {
@@ -112,6 +114,11 @@ export default function NewQuizPage() {
         <label>
           <input type="checkbox" checked={enableFaceCentering} onChange={(e) => setEnableFaceCentering(e.target.checked)} />
           &nbsp;Require face centered during exam
+        </label>
+        <br />
+        <label>
+          <input type="checkbox" checked={enableSecondCam} onChange={(e) => setEnableSecondCam(e.target.checked)} />
+          &nbsp;Require second camera (mobile QR)
         </label>
         <br />
         <br />

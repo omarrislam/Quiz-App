@@ -16,8 +16,10 @@ type QuizPayload = {
     logSuspiciousActivity: boolean;
     enableWebcamSnapshots: boolean;
     enableFaceCentering: boolean;
+    enableSecondCam: boolean;
     totalTimeSeconds: number | null;
   };
+  secondCamToken?: string | null;
 };
 
 type ResultPayload = { correctCount: number; totalQuestions: number };
@@ -31,6 +33,12 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
   const [faceCenteringRequired, setFaceCenteringRequired] = useState(false);
   const [webcamGranted, setWebcamGranted] = useState(false);
   const [webcamError, setWebcamError] = useState("");
+  const [secondCamRequired, setSecondCamRequired] = useState(false);
+  const [secondCamToken, setSecondCamToken] = useState<string | null>(null);
+  const [secondCamQr, setSecondCamQr] = useState<string | null>(null);
+  const [secondCamConnected, setSecondCamConnected] = useState(false);
+  const [secondCamError, setSecondCamError] = useState("");
+  const [pendingQuiz, setPendingQuiz] = useState<QuizPayload | null>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
@@ -67,6 +75,7 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
           const webcamNeeded = Boolean(data.enableWebcamSnapshots) || Boolean(data.enableFaceCentering);
           setWebcamRequired(webcamNeeded);
           setFaceCenteringRequired(Boolean(data.enableFaceCentering));
+          setSecondCamRequired(Boolean(data.enableSecondCam));
         }
       })
       .catch(() => {});
@@ -141,6 +150,18 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
       setError(data?.error || "OTP verification failed.");
       return;
     }
+    if (data.settings?.enableSecondCam) {
+      if (!data.secondCamToken) {
+        setError("Second camera token missing. Contact instructor.");
+        return;
+      }
+      setSecondCamToken(data.secondCamToken);
+      setSecondCamConnected(false);
+      setSecondCamQr(null);
+      setSecondCamError("");
+      setPendingQuiz(data);
+      return;
+    }
     setQuiz(data);
   }
 
@@ -182,10 +203,52 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
         logSuspiciousActivity={quiz.settings.logSuspiciousActivity}
         enableWebcamSnapshots={quiz.settings.enableWebcamSnapshots}
         enableFaceCentering={quiz.settings.enableFaceCentering}
+        enableSecondCam={quiz.settings.enableSecondCam}
         onFinish={setResult}
       />
     );
   }
+
+  useEffect(() => {
+    let active = true;
+    if (!pendingQuiz || !secondCamToken) return () => {};
+    const url = `${window.location.origin}/second-cam?attemptId=${pendingQuiz.attemptId}&token=${encodeURIComponent(secondCamToken)}`;
+    import("qrcode")
+      .then((QRCode) => QRCode.toDataURL(url, { margin: 1, width: 220 }))
+      .then((dataUrl) => {
+        if (!active) return;
+        setSecondCamQr(dataUrl);
+      })
+      .catch(() => {
+        if (!active) return;
+        setSecondCamError("Unable to generate QR code.");
+      });
+    return () => {
+      active = false;
+    };
+  }, [pendingQuiz, secondCamToken]);
+
+  useEffect(() => {
+    if (!pendingQuiz) return () => {};
+    let active = true;
+    const poll = async () => {
+      try {
+        const res = await apiFetch(`/api/attempts/${pendingQuiz.attemptId}/second-cam/status`);
+        const data = await res.json().catch(() => null);
+        if (!active) return;
+        setSecondCamConnected(Boolean(data?.connected));
+      } catch {
+        if (!active) return;
+        setSecondCamConnected(false);
+      }
+    };
+    poll();
+    const timer = window.setInterval(poll, 3000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, [pendingQuiz]);
 
   return (
     <main>
@@ -241,16 +304,26 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
                 : "Webcam access required to start."
               : "Webcam not required for this quiz."}
           </span>
+          {secondCamRequired && !pendingQuiz ? (
+            <span className="section-title">Second camera required before starting.</span>
+          ) : null}
           {webcamError ? <span className="section-title">{webcamError}</span> : null}
         </div>
         <br />
         <div className="button-row">
           <button
             className="button"
-            onClick={verify}
-            disabled={(webcamRequired === null) || (webcamRequired && !webcamGranted)}
+            onClick={pendingQuiz ? () => {
+              setQuiz(pendingQuiz);
+              setPendingQuiz(null);
+            } : verify}
+            disabled={
+              pendingQuiz
+                ? !secondCamConnected
+                : (webcamRequired === null) || (webcamRequired && !webcamGranted)
+            }
           >
-            Start Quiz
+            {pendingQuiz ? "Enter Quiz" : "Start Quiz"}
           </button>
           <button className="button-secondary" type="button" onClick={resendOtp}>Resend OTP</button>
           <button
@@ -264,6 +337,24 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
             Time per question: {questionTimeSeconds ?? 35}s
           </span>
         </div>
+        {pendingQuiz ? (
+          <>
+            <br />
+            <div className="card">
+              <p className="section-title">Second camera required</p>
+              <p>Scan the QR code to open the second camera on your mobile device.</p>
+              {secondCamQr ? (
+                <img src={secondCamQr} alt="Second camera QR" style={{ width: 220, maxWidth: "100%" }} />
+              ) : null}
+              {secondCamToken ? (
+                <p className="section-title" style={{ marginTop: 8 }}>
+                  Status: {secondCamConnected ? "Connected" : "Waiting for connection..."}
+                </p>
+              ) : null}
+              {secondCamError ? <p className="section-title">{secondCamError}</p> : null}
+            </div>
+          </>
+        ) : null}
         {message ? <p>{message}</p> : null}
         {error ? <p>{error}</p> : null}
       </div>

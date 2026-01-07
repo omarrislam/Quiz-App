@@ -59,7 +59,11 @@ export async function updateQuiz(instructorId: string, quizId: string, payload: 
     throw new ApiError("Quiz not found", 404);
   }
   const settings = normalizeSettings(payload.settings);
-  const mergedSettings = settings ? { ...existing.settings, ...settings } : undefined;
+  const baseSettings = { ...existing.settings };
+  if (typeof baseSettings.enableSecondCam === "undefined") {
+    baseSettings.enableSecondCam = false;
+  }
+  const mergedSettings = settings ? { ...baseSettings, ...settings } : undefined;
   const nextPayload = mergedSettings ? { ...payload, settings: mergedSettings } : payload;
   let updated = await Quiz.findOneAndUpdate(
     { _id: quizId, instructorId },

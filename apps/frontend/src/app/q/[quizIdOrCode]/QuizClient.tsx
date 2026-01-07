@@ -88,25 +88,42 @@ export default function QuizClient({
     });
   }
 
+  function buildAnswersPayload() {
+    return {
+      answers: questions.map((q) => {
+        const selectedIndex = answers[q.id] ?? null;
+        return {
+          questionId: q.id,
+          selectedIndex,
+          selectedOption: selectedIndex == null ? null : q.options[selectedIndex] ?? null
+        };
+      })
+    };
+  }
+
   function resolveApiUrl(path: string) {
     const base = typeof process !== "undefined" ? (process.env.NEXT_PUBLIC_API_BASE_URL || "") : "";
     if (!base) return path;
     return `${base.replace(/\/$/, "")}${path.startsWith("/") ? "" : "/"}${path}`;
   }
 
-  function abandonAttempt(reason: string) {
+  function submitAttemptOnExit(reason: string) {
     if (abandonRef.current) return;
     abandonRef.current = true;
     setForceEnded(true);
     setPaused(true);
     stopWebcam();
-    const payload = JSON.stringify({ reason });
+    const payload = JSON.stringify({ ...buildAnswersPayload(), reason });
     if (typeof navigator !== "undefined" && "sendBeacon" in navigator) {
       const blob = new Blob([payload], { type: "application/json" });
-      navigator.sendBeacon(resolveApiUrl(`/api/attempts/${attemptId}/abandon`), blob);
+      const finishUrl = resolveApiUrl(`/api/attempts/${attemptId}/finish`);
+      const sent = navigator.sendBeacon(finishUrl, blob);
+      if (!sent) {
+        navigator.sendBeacon(resolveApiUrl(`/api/attempts/${attemptId}/abandon`), blob);
+      }
       return;
     }
-    apiFetch(`/api/attempts/${attemptId}/abandon`, {
+    apiFetch(`/api/attempts/${attemptId}/finish`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: payload
@@ -466,14 +483,14 @@ export default function QuizClient({
     const onVisibility = () => {
       if (document.hidden) {
         logEvent("visibility_hidden", "Tab hidden");
-        abandonAttempt("visibility_hidden");
+        submitAttemptOnExit("visibility_hidden");
       } else {
         logEvent("visibility_visible", "Tab visible");
       }
     };
     const onBlur = () => logEvent("window_blur", "Window blurred");
     const onFocus = () => logEvent("window_focus", "Window focused");
-    const onPageHide = () => abandonAttempt("page_hide");
+    const onPageHide = () => submitAttemptOnExit("page_hide");
 
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("blur", onBlur);
@@ -624,16 +641,7 @@ export default function QuizClient({
     if (submittingRef.current) return;
     submittingRef.current = true;
     await captureSnapshot("end");
-    const payload = {
-      answers: questions.map((q) => {
-        const selectedIndex = answers[q.id] ?? null;
-        return {
-          questionId: q.id,
-          selectedIndex,
-          selectedOption: selectedIndex == null ? null : q.options[selectedIndex] ?? null
-        };
-      })
-    };
+    const payload = buildAnswersPayload();
     try {
       const res = await apiFetch(`/api/attempts/${attemptId}/finish`, {
         method: "POST",

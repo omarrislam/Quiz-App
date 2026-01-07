@@ -88,6 +88,12 @@ export default function QuizClient({
     });
   }
 
+  function resolveApiUrl(path: string) {
+    const base = typeof process !== "undefined" ? (process.env.NEXT_PUBLIC_API_BASE_URL || "") : "";
+    if (!base) return path;
+    return `${base.replace(/\/$/, "")}${path.startsWith("/") ? "" : "/"}${path}`;
+  }
+
   function abandonAttempt(reason: string) {
     if (abandonRef.current) return;
     abandonRef.current = true;
@@ -97,7 +103,7 @@ export default function QuizClient({
     const payload = JSON.stringify({ reason });
     if (typeof navigator !== "undefined" && "sendBeacon" in navigator) {
       const blob = new Blob([payload], { type: "application/json" });
-      navigator.sendBeacon(`/api/attempts/${attemptId}/abandon`, blob);
+      navigator.sendBeacon(resolveApiUrl(`/api/attempts/${attemptId}/abandon`), blob);
       return;
     }
     apiFetch(`/api/attempts/${attemptId}/abandon`, {

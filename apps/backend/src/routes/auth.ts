@@ -18,6 +18,9 @@ authRouter.post("/register", async (req, res) => {
     if (!name || !email || !password) {
       throw new ApiError("Missing required fields", 400);
     }
+    if (!email.endsWith("@mans.edu.eg")) {
+      throw new ApiError("Registration is restricted to @mans.edu.eg emails", 403);
+    }
     await connectDb();
     const existing = await Instructor.findOne({ email }).lean();
     if (existing) {

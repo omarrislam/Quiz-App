@@ -33,6 +33,7 @@ export default function RegisterPage() {
     <main>
       <h1>Create Instructor Account</h1>
       <div className="card">
+        <p className="section-title">Only @mans.edu.eg emails can register.</p>
         <input className="input" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
         <br />
         <br />

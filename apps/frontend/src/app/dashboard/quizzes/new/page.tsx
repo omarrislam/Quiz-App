@@ -18,6 +18,7 @@ export default function NewQuizPage() {
   const [enableWebcamSnapshots, setEnableWebcamSnapshots] = useState(false);
   const [enableFaceCentering, setEnableFaceCentering] = useState(false);
   const [enableSecondCam, setEnableSecondCam] = useState(false);
+  const [mobileAllowed, setMobileAllowed] = useState(true);
   const [creating, setCreating] = useState(false);
 
   async function submit() {
@@ -35,7 +36,8 @@ export default function NewQuizPage() {
       logSuspiciousActivity,
       enableWebcamSnapshots,
       enableFaceCentering,
-      enableSecondCam
+      enableSecondCam,
+      mobileAllowed
     };
 
     await apiFetch("/api/quizzes", {
@@ -112,13 +114,39 @@ export default function NewQuizPage() {
         </label>
         <br />
         <label>
-          <input type="checkbox" checked={enableFaceCentering} onChange={(e) => setEnableFaceCentering(e.target.checked)} />
+          <input
+            type="checkbox"
+            checked={enableFaceCentering}
+            onChange={(e) => setEnableFaceCentering(e.target.checked)}
+            disabled={mobileAllowed}
+          />
           &nbsp;Require face centered during exam
         </label>
         <br />
         <label>
-          <input type="checkbox" checked={enableSecondCam} onChange={(e) => setEnableSecondCam(e.target.checked)} />
+          <input
+            type="checkbox"
+            checked={enableSecondCam}
+            onChange={(e) => setEnableSecondCam(e.target.checked)}
+            disabled={mobileAllowed}
+          />
           &nbsp;Require second camera (mobile QR)
+        </label>
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={mobileAllowed}
+            onChange={(e) => {
+              const next = e.target.checked;
+              setMobileAllowed(next);
+              if (next) {
+                setEnableFaceCentering(false);
+                setEnableSecondCam(false);
+              }
+            }}
+          />
+          &nbsp;Allow students to join from mobile (disables face centering + second cam)
         </label>
         <br />
         <br />

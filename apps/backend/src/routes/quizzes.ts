@@ -46,7 +46,8 @@ quizzesRouter.get("/:quizId/public", async (req, res) => {
       questionTimeSeconds: quiz.settings?.questionTimeSeconds || 35,
       enableWebcamSnapshots: Boolean(quiz.settings?.enableWebcamSnapshots),
       enableFaceCentering: Boolean(quiz.settings?.enableFaceCentering),
-      enableSecondCam: Boolean(quiz.settings?.enableSecondCam)
+      enableSecondCam: Boolean(quiz.settings?.enableSecondCam),
+      mobileAllowed: quiz.settings?.mobileAllowed !== false
     });
   } catch (error) {
     return handleError(res, error);
@@ -100,7 +101,12 @@ quizzesRouter.post("/:quizId/invitations/resend-otp", async (req, res) => {
 quizzesRouter.post("/:quizId/verify-otp", async (req, res) => {
   try {
     await connectDb();
-    const { quiz, attempt } = await verifyOtpAndStart(req.params.quizId, req.body?.email, req.body?.otp);
+    const { quiz, attempt } = await verifyOtpAndStart(
+      req.params.quizId,
+      req.body?.email,
+      req.body?.otp,
+      req.get("user-agent")
+    );
     const questions = await Question.find({ quizId: quiz._id }).lean();
     if (questions.length === 0) {
       throw new ApiError("No questions uploaded for this quiz", 400);
@@ -126,6 +132,7 @@ quizzesRouter.post("/:quizId/verify-otp", async (req, res) => {
         enableWebcamSnapshots: quiz.settings.enableWebcamSnapshots,
         enableFaceCentering: quiz.settings.enableFaceCentering,
         enableSecondCam: quiz.settings.enableSecondCam,
+        mobileAllowed: quiz.settings.mobileAllowed !== false,
         totalTimeSeconds: quiz.settings.totalTimeSeconds || null
       },
       secondCamToken,

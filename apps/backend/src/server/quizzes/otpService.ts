@@ -5,7 +5,13 @@ import { Attempt } from "../models/Attempt";
 import { ApiError } from "../http/errors";
 import { verifyOtp } from "../security/otp";
 
-export async function verifyOtpAndStart(quizIdOrCode: string, email: string, otp: string) {
+function isMobileUserAgent(userAgent?: string | null) {
+  if (!userAgent) return false;
+  const value = userAgent.toLowerCase();
+  return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/.test(value);
+}
+
+export async function verifyOtpAndStart(quizIdOrCode: string, email: string, otp: string, userAgent?: string | null) {
   const quiz = await Quiz.findOne({ $or: [{ _id: quizIdOrCode }, { quizCode: quizIdOrCode }] }).lean();
   if (!quiz) {
     throw new ApiError("Quiz not found", 404);
@@ -15,6 +21,9 @@ export async function verifyOtpAndStart(quizIdOrCode: string, email: string, otp
   }
   if (quiz.status === "draft") {
     throw new ApiError("Quiz is not published yet", 403);
+  }
+  if (quiz.settings.mobileAllowed === false && isMobileUserAgent(userAgent)) {
+    throw new ApiError("Mobile devices are not allowed for this quiz", 403);
   }
 
   const invitation = await Invitation.findOne({ quizId: quiz._id, email });

@@ -17,6 +17,7 @@ type QuizPayload = {
     enableWebcamSnapshots: boolean;
     enableFaceCentering: boolean;
     enableSecondCam: boolean;
+    mobileAllowed: boolean;
     totalTimeSeconds: number | null;
   };
   secondCamToken?: string | null;
@@ -33,6 +34,7 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
   const [faceCenteringRequired, setFaceCenteringRequired] = useState(false);
   const [webcamGranted, setWebcamGranted] = useState(false);
   const [webcamError, setWebcamError] = useState("");
+  const [mobileAllowed, setMobileAllowed] = useState(true);
   const [secondCamRequired, setSecondCamRequired] = useState(false);
   const [secondCamToken, setSecondCamToken] = useState<string | null>(null);
   const [secondCamQr, setSecondCamQr] = useState<string | null>(null);
@@ -51,6 +53,9 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
   const [message, setMessage] = useState("");
   const [suggestions, setSuggestions] = useState<Student[]>([]);
   const [showList, setShowList] = useState(false);
+  const isMobileDevice = typeof window !== "undefined" && window.matchMedia
+    ? window.matchMedia("(pointer:coarse)").matches || window.innerWidth < 768
+    : false;
 
   useEffect(() => {
     const paramsObj = new URLSearchParams(window.location.search);
@@ -125,6 +130,7 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
           setWebcamRequired(webcamNeeded);
           setFaceCenteringRequired(Boolean(data.enableFaceCentering));
           setSecondCamRequired(Boolean(data.enableSecondCam));
+          setMobileAllowed(data.mobileAllowed !== false);
         }
       })
       .catch(() => {});
@@ -175,6 +181,10 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
   async function verify() {
     setError("");
     setMessage("");
+    if (!mobileAllowed && isMobileDevice) {
+      setError("This quiz is not available on mobile devices. Please use a desktop browser.");
+      return;
+    }
     if (webcamRequired) {
       const granted = webcamGranted || (await requestWebcamAccess());
       if (!granted) {
@@ -372,6 +382,9 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
           {secondCamRequired && !pendingQuiz ? (
             <span className="section-title">Second camera required before starting.</span>
           ) : null}
+          {!mobileAllowed && isMobileDevice ? (
+            <span className="section-title">Mobile access disabled. Open on desktop.</span>
+          ) : null}
           {webcamError ? <span className="section-title">{webcamError}</span> : null}
         </div>
         <br />
@@ -385,7 +398,7 @@ export default function QuizPage({ params }: { params: { quizIdOrCode: string } 
             disabled={
               pendingQuiz
                 ? !secondCamConnected
-                : (webcamRequired === null) || (webcamRequired && !webcamGranted)
+                : (!mobileAllowed && isMobileDevice) || (webcamRequired === null) || (webcamRequired && !webcamGranted)
             }
           >
             {pendingQuiz ? "Enter Quiz" : "Start Quiz"}

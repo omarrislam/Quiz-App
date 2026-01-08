@@ -16,6 +16,7 @@ type QuizSettings = {
   enableWebcamSnapshots: boolean;
   enableFaceCentering: boolean;
   enableSecondCam: boolean;
+  mobileAllowed: boolean;
 };
 
 export default function QuizSettingsPage({ params }: { params: { quizId: string } }) {
@@ -32,7 +33,8 @@ export default function QuizSettingsPage({ params }: { params: { quizId: string 
     logSuspiciousActivity: true,
     enableWebcamSnapshots: false,
     enableFaceCentering: false,
-    enableSecondCam: false
+    enableSecondCam: false,
+    mobileAllowed: true
   });
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
@@ -63,12 +65,26 @@ export default function QuizSettingsPage({ params }: { params: { quizId: string 
             logSuspiciousActivity: Boolean(data.settings?.logSuspiciousActivity),
             enableWebcamSnapshots: Boolean(data.settings?.enableWebcamSnapshots),
             enableFaceCentering: Boolean(data.settings?.enableFaceCentering),
-            enableSecondCam: Boolean(data.settings?.enableSecondCam)
+            enableSecondCam: Boolean(data.settings?.enableSecondCam),
+            mobileAllowed: data.settings?.mobileAllowed !== false
           });
         }
       })
       .catch(() => {});
   }, [params.quizId]);
+
+  function toggleMobileAllowed(value: boolean) {
+    if (value) {
+      setSettings({
+        ...settings,
+        mobileAllowed: true,
+        enableFaceCentering: false,
+        enableSecondCam: false
+      });
+      return;
+    }
+    setSettings({ ...settings, mobileAllowed: false });
+  }
 
   async function save() {
     setMessage("");
@@ -205,6 +221,7 @@ export default function QuizSettingsPage({ params }: { params: { quizId: string 
             type="checkbox"
             checked={settings.enableFaceCentering}
             onChange={(e) => setSettings({ ...settings, enableFaceCentering: e.target.checked })}
+            disabled={settings.mobileAllowed}
           />
           &nbsp;Require face centered during exam
         </label>
@@ -214,8 +231,18 @@ export default function QuizSettingsPage({ params }: { params: { quizId: string 
             type="checkbox"
             checked={settings.enableSecondCam}
             onChange={(e) => setSettings({ ...settings, enableSecondCam: e.target.checked })}
+            disabled={settings.mobileAllowed}
           />
           &nbsp;Require second camera (mobile QR)
+        </label>
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={settings.mobileAllowed}
+            onChange={(e) => toggleMobileAllowed(e.target.checked)}
+          />
+          &nbsp;Allow students to join from mobile (disables face centering + second cam)
         </label>
         <br />
         <br />

@@ -13,6 +13,10 @@ function normalizeSettings(settings?: Partial<QuizSettings>) {
     const endAt = new Date(normalized.endAt);
     normalized.endAt = Number.isNaN(endAt.getTime()) ? null : endAt;
   }
+  if (normalized.mobileAllowed === true) {
+    normalized.enableFaceCentering = false;
+    normalized.enableSecondCam = false;
+  }
   return normalized;
 }
 

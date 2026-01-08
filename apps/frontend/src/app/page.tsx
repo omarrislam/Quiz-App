@@ -1,6 +1,15 @@
 "use client";
 
+import { useEffect } from "react";
+import { getAuthToken } from "../lib/api";
+
 export default function HomePage() {
+  useEffect(() => {
+    if (getAuthToken()) {
+      window.location.href = "/dashboard";
+    }
+  }, []);
+
   return (
     <main>
       <div className="header">

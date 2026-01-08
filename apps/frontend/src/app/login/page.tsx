@@ -1,13 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { apiFetch, setAuthToken } from "../../lib/api";
+import { useEffect, useState } from "react";
+import { apiFetch, getAuthToken, setAuthToken } from "../../lib/api";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (getAuthToken()) {
+      window.location.href = "/dashboard";
+    }
+  }, []);
 
   async function submit() {
     setError("");

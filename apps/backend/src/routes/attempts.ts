@@ -56,7 +56,8 @@ attemptsRouter.post("/:attemptId/events", async (req, res) => {
 attemptsRouter.post("/:attemptId/finish", async (req, res) => {
   try {
     await connectDb();
-    const result = await finishAttempt(req.params.attemptId, req.body?.answers || []);
+    const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
+    const result = await finishAttempt(req.params.attemptId, body?.answers || []);
     await SecondCamSession.deleteMany({ attemptId: req.params.attemptId });
     return ok(res, result);
   } catch (error) {
@@ -78,10 +79,11 @@ attemptsRouter.post("/:attemptId/abandon", async (req, res) => {
       { _id: req.params.attemptId },
       { $set: { status: "forcibly_ended", submittedAt: new Date() } }
     );
+    const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
     await AuditLog.create({
       quizId: attempt.quizId,
       type: "attempt_abandoned",
-      message: `Attempt ended after leaving tab (${req.body?.reason || "unknown"})`,
+      message: `Attempt ended after leaving tab (${body?.reason || "unknown"})`,
       meta: { attemptId: attempt._id.toString(), email: attempt.studentEmail }
     });
     await SecondCamSession.deleteMany({ attemptId: req.params.attemptId });

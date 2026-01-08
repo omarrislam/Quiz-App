@@ -38,6 +38,7 @@ export default function QuizClient({
 }: Props) {
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number | null>>({});
+  const answersRef = useRef<Record<string, number | null>>({});
   const [remaining, setRemaining] = useState(questionTimeSeconds);
   const [examRemaining, setExamRemaining] = useState(totalTimeSeconds || 0);
   const [paused, setPaused] = useState(false);
@@ -75,6 +76,10 @@ export default function QuizClient({
   }, [index, questionTimeSeconds]);
 
   useEffect(() => {
+    answersRef.current = answers;
+  }, [answers]);
+
+  useEffect(() => {
     if (!totalTimeSeconds) return;
     setExamRemaining(totalTimeSeconds);
   }, [totalTimeSeconds]);
@@ -91,7 +96,7 @@ export default function QuizClient({
   function buildAnswersPayload() {
     return {
       answers: questions.map((q) => {
-        const selectedIndex = answers[q.id] ?? null;
+        const selectedIndex = answersRef.current[q.id] ?? null;
         return {
           questionId: q.id,
           selectedIndex,
@@ -634,6 +639,7 @@ export default function QuizClient({
   }, [index, total]);
 
   function choose(optionIndex: number) {
+    answersRef.current = { ...answersRef.current, [current.id]: optionIndex };
     setAnswers((prev) => ({ ...prev, [current.id]: optionIndex }));
   }
 
